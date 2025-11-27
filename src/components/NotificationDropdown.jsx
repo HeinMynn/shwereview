@@ -17,10 +17,10 @@ export default function NotificationDropdown() {
         if (session) {
             fetchNotifications();
 
-            // Poll for new notifications every 30 seconds
+            // Poll for new notifications every 5 seconds
             const interval = setInterval(() => {
                 fetchNotifications();
-            }, 30000); // 30 seconds
+            }, 5000); // 5 seconds
 
             return () => clearInterval(interval);
         }
