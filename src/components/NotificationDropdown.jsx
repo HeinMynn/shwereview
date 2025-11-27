@@ -17,26 +17,12 @@ export default function NotificationDropdown() {
         if (session) {
             fetchNotifications();
 
-            // Poll for new notifications every 10 seconds, but only if tab is visible
+            // Poll for new notifications every 30 seconds
             const interval = setInterval(() => {
-                if (document.visibilityState === 'visible') {
-                    fetchNotifications();
-                }
-            }, 10000); // 10 seconds
+                fetchNotifications();
+            }, 30000); // 30 seconds
 
-            // Also fetch immediately when user switches back to this tab
-            const handleVisibilityChange = () => {
-                if (document.visibilityState === 'visible') {
-                    fetchNotifications();
-                }
-            };
-
-            document.addEventListener('visibilitychange', handleVisibilityChange);
-
-            return () => {
-                clearInterval(interval);
-                document.removeEventListener('visibilitychange', handleVisibilityChange);
-            };
+            return () => clearInterval(interval);
         }
     }, [session]);
 
@@ -57,30 +43,15 @@ export default function NotificationDropdown() {
             const data = await res.json();
             if (data.notifications) {
                 let fetchedNotifications = data.notifications;
-                let currentStatus = session?.user?.account_status;
-
-                // Check for status updates from server
-                if (data.userStatus) {
-                    const serverStatus = data.userStatus.account_status;
-                    const serverRole = data.userStatus.role;
-
-                    // If status or role changed, refresh session
-                    if (serverStatus !== session?.user?.account_status ||
-                        serverRole !== session?.user?.role) {
-                        await update();
-                        currentStatus = serverStatus; // Use fresh status for UI
-                    }
-                }
 
                 // Inject persistent suspended notification if user is suspended
-                if (currentStatus === 'suspended') {
-                    const isSuspendedRead = localStorage.getItem('suspended_alert_read') === 'true';
+                if (session?.user?.account_status === 'suspended') {
                     const suspendedNotification = {
                         _id: 'suspended-alert',
                         title: 'Account Suspended',
                         message: 'Your account has been suspended due to policy violations. You cannot perform actions.',
                         type: 'alert',
-                        is_read: isSuspendedRead,
+                        is_read: false,
                         createdAt: new Date().toISOString(),
                         link: '/community-guidelines'
                     };
@@ -94,10 +65,9 @@ export default function NotificationDropdown() {
                 const hasNewApproval = data.notifications.some(n =>
                     n.type === 'claim_approved' && !n.is_read
                 );
-
-                // We already updated session above if role changed, but keep this as backup check
-                if (hasNewApproval && session && data.userStatus?.role === session.user.role) {
-                    // Only update if we haven't already (role match check avoids double update)
+                if (hasNewApproval && session) {
+                    // Trigger session refresh to get updated user role
+                    await update();
                 }
             }
         } catch (error) {
@@ -108,16 +78,6 @@ export default function NotificationDropdown() {
     };
 
     const markAsRead = async (notificationId) => {
-        // Handle local suspended alert
-        if (notificationId === 'suspended-alert') {
-            localStorage.setItem('suspended_alert_read', 'true');
-            setNotifications(prev =>
-                prev.map(n => n._id === notificationId ? { ...n, is_read: true } : n)
-            );
-            setUnreadCount(prev => Math.max(0, prev - 1));
-            return;
-        }
-
         try {
             const res = await fetch(`/api/notifications/${notificationId}/read`, {
                 method: 'POST',
@@ -136,12 +96,6 @@ export default function NotificationDropdown() {
 
     const markAllAsRead = async () => {
         setLoading(true);
-
-        // Handle local suspended alert
-        if (notifications.some(n => n._id === 'suspended-alert' && !n.is_read)) {
-            localStorage.setItem('suspended_alert_read', 'true');
-        }
-
         try {
             const res = await fetch('/api/notifications/read-all', {
                 method: 'POST',
