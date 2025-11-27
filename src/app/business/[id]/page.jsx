@@ -45,7 +45,10 @@ export default async function BusinessProfile({ params }) {
     if (!data) return notFound();
 
     const { business, reviews } = data;
+    const session = await getServerSession(authOptions);
+
     const isUnclaimed = !business.owner_id;
+    const hasPendingClaim = business.claim_status === 'pending' && business.claimant_id?.toString() === session?.user?.id;
 
     return (
         <main className="min-h-screen bg-slate-50 pb-12">
@@ -75,6 +78,11 @@ export default async function BusinessProfile({ params }) {
                                         Unclaimed
                                     </span>
                                 )}
+                                {hasPendingClaim && (
+                                    <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+                                        Claim Pending
+                                    </span>
+                                )}
                             </div>
                             <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">{business.name}</h1>
                             <div className="flex items-center gap-4 text-slate-300 text-sm">
@@ -94,12 +102,21 @@ export default async function BusinessProfile({ params }) {
                             <Button className="bg-white text-slate-900 hover:bg-slate-100">
                                 <Share2 className="w-4 h-4 mr-2" /> Share
                             </Button>
-                            {isUnclaimed && (
+                            {isUnclaimed && !hasPendingClaim && (
                                 <Link href={`/business/${id}/claim`}>
                                     <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
                                         Claim this Business
                                     </Button>
                                 </Link>
+                            )}
+                            {hasPendingClaim && (
+                                <Button
+                                    disabled
+                                    className="bg-gray-400 text-white cursor-not-allowed"
+                                    title="Your claim is pending review by admin"
+                                >
+                                    Pending Claim
+                                </Button>
                             )}
                         </div>
                     </div>

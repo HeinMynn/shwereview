@@ -19,6 +19,15 @@ export default function AdminBusinessList({ initialBusinesses }) {
         setBusinesses(initialBusinesses);
     }, [initialBusinesses]);
 
+    // Auto-refresh business list every 15 seconds for real-time updates
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.refresh(); // Refresh server components data
+        }, 15000); // 15 seconds
+
+        return () => clearInterval(interval);
+    }, [router]);
+
     const updateStatus = async (businessId, newStatus) => {
         console.log('Updating status for:', businessId, 'to', newStatus);
         setLoadingId(businessId);
@@ -126,11 +135,18 @@ export default function AdminBusinessList({ initialBusinesses }) {
                             <div key={business._id} className="bg-white p-3 rounded border border-orange-100 shadow-sm">
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                        <div className="font-bold">{business.name}</div>
-                                        <div className="text-sm text-gray-600">Claimant ID: {business.claimant_id}</div>
+                                        <div className="font-bold text-gray-900">{business.name}</div>
+
+                                        {/* Claimant Info */}
+                                        <div className="text-sm text-gray-700 mt-1">
+                                            <span className="font-semibold">Claimant:</span>{' '}
+                                            {business.claimant_id?.name || 'Unknown'}{' '}
+                                            <span className="text-gray-600">({business.claimant_id?.email || 'N/A'})</span>
+                                        </div>
+
                                         <div className="mt-1 text-xs">
                                             <span className="font-bold text-gray-700">Method: </span>
-                                            <span className="uppercase bg-gray-100 px-1 rounded">{business.claim_verification_method || 'Document'}</span>
+                                            <span className="uppercase bg-gray-200 px-2 py-0.5 rounded text-gray-900 font-medium">{business.claim_verification_method || 'Document'}</span>
                                         </div>
 
                                         {business.claim_verification_method === 'document' && business.claim_proof && (
@@ -140,18 +156,33 @@ export default function AdminBusinessList({ initialBusinesses }) {
                                         )}
 
                                         {business.claim_verification_method === 'dns' && (
-                                            <div className="text-xs text-gray-500 mt-1">
-                                                Token: <code className="bg-gray-50 px-1">{business.claim_verification_data?.substring(0, 20)}...</code>
-                                                <span className={`ml-2 font-bold ${business.claim_verification_status === 'verified' ? 'text-green-600' : 'text-red-600'}`}>
-                                                    {business.claim_verification_status}
-                                                </span>
+                                            <div className="text-xs mt-1 space-y-1">
+                                                <div className="mb-1">
+                                                    <span className="font-semibold text-gray-700">Domain:</span>{' '}
+                                                    <span className="bg-blue-50 px-2 py-0.5 rounded text-gray-900 font-medium">
+                                                        {business.claim_domain || 'Not provided'}
+                                                    </span>
+                                                </div>
+                                                <div className="text-gray-700">
+                                                    <span className="font-semibold">Token:</span>{' '}
+                                                    <code className="bg-gray-100 px-1 text-gray-900">{business.claim_verification_data?.substring(0, 20)}...</code>
+                                                </div>
+                                                <div>
+                                                    <span className="font-semibold text-gray-700">Status:</span>{' '}
+                                                    <span className={`font-bold ${business.claim_verification_status === 'verified' ? 'text-green-600' : 'text-red-600'}`}>
+                                                        {business.claim_verification_status}
+                                                    </span>
+                                                </div>
                                             </div>
                                         )}
 
                                         {business.claim_verification_method === 'email' && (
-                                            <div className="text-xs text-gray-500 mt-1">
-                                                Email: {business.claim_verification_data?.split('|')[0]}
-                                                <span className={`ml-2 font-bold ${business.claim_verification_status === 'verified' ? 'text-green-600' : 'text-red-600'}`}>
+                                            <div className="text-xs text-gray-700 mt-1">
+                                                <div className="mb-1">
+                                                    <span className="font-semibold">Verification Email:</span>{' '}
+                                                    <span className="bg-blue-50 px-2 py-0.5 rounded text-gray-900 font-medium">{business.claim_email || business.claim_verification_data?.split('|')[0]}</span>
+                                                </div>
+                                                <span className={`font-bold ${business.claim_verification_status === 'verified' ? 'text-green-600' : 'text-red-600'}`}>
                                                     {business.claim_verification_status}
                                                 </span>
                                             </div>
@@ -190,7 +221,7 @@ export default function AdminBusinessList({ initialBusinesses }) {
                         <div key={business._id} className="p-3 bg-white border rounded-lg flex flex-col gap-2">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <div className="font-bold flex items-center gap-2">
+                                    <div className="font-bold text-gray-900 flex items-center gap-2">
                                         {business.name}
                                         <span className={`text-xs px-2 py-0.5 rounded capitalize ${business.status === 'approved' ? 'bg-green-100 text-green-800' :
                                             business.status === 'rejected' ? 'bg-red-100 text-red-800' :
@@ -199,10 +230,10 @@ export default function AdminBusinessList({ initialBusinesses }) {
                                             {business.status || 'pending'}
                                         </span>
                                     </div>
-                                    <div className="text-sm text-gray-500">
+                                    <div className="text-sm text-gray-700">
                                         Owner: {business.owner_id ? (business.owner_id.name || 'Assigned') : 'Unclaimed'}
                                     </div>
-                                    <div className="text-xs text-gray-400 uppercase mt-1">{business.category}</div>
+                                    <div className="text-xs text-gray-600 uppercase mt-1">{business.category}</div>
                                 </div>
 
                                 <button

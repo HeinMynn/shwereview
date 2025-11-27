@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import dbConnect from '@/lib/mongodb';
-import { Business, User } from '@/lib/models';
+import { Business, User, Notification } from '@/lib/models';
 
 export async function POST(request) {
     const session = await getServerSession(authOptions);
@@ -33,16 +33,44 @@ export async function POST(request) {
             business.owner_id = business.claimant_id;
             business.claim_status = 'approved';
 
-            // Update User role to Owner if not already
-            await User.findByIdAndUpdate(business.claimant_id, { role: 'Owner' });
+            // Update User role to Owner only if they're not already Super Admin
+            const claimant = await User.findById(business.claimant_id);
+            if (claimant && claimant.role !== 'Super Admin') {
+                await User.findByIdAndUpdate(business.claimant_id, { role: 'Owner' });
+            }
+
+            // Create approval notification
+            await Notification.create({
+                user_id: business.claimant_id,
+                type: 'claim_approved',
+                title: 'Business Claim Approved',
+                message: `Your claim for "${business.name}" has been approved! You are now the owner.`,
+                link: `/business/${business._id}`,
+                metadata: {
+                    business_id: business._id.toString(),
+                    business_name: business.name,
+                }
+            });
         } else {
             business.claim_status = 'rejected';
-        }
 
-        // Clear claimant info after processing (optional, but good for history if we had a separate collection. Here we keep status but maybe clear temp fields? Let's keep them for record for now)
-        // Actually, if rejected, we might want to allow re-claiming.
-        if (action === 'rejected') {
-            business.claim_status = 'unclaimed'; // Reset to unclaimed so others can claim
+            // Create rejection notification
+            if (business.claimant_id) {
+                await Notification.create({
+                    user_id: business.claimant_id,
+                    type: 'claim_rejected',
+                    title: 'Business Claim Rejected',
+                    message: `Your claim for "${business.name}" has been rejected. Please contact support if you believe this is an error.`,
+                    link: `/business/${business._id}`,
+                    metadata: {
+                        business_id: business._id.toString(),
+                        business_name: business.name,
+                    }
+                });
+            }
+
+            // Reset to unclaimed so others can claim
+            business.claim_status = 'unclaimed';
             business.claimant_id = null;
             business.claim_proof = null;
         }

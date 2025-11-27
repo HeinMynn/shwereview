@@ -59,6 +59,8 @@ const BusinessSchema = new mongoose.Schema({
         enum: ['pending', 'verified', 'failed'],
         default: 'pending'
     },
+    claim_email: { type: String }, // Email address used for claim verification
+    claim_domain: { type: String }, // Domain used for DNS verification
     aggregate_rating: { type: Number, default: 0 },
     micro_metrics_aggregates: { type: Map, of: Number, default: {} },
 }, { timestamps: true });
@@ -93,10 +95,25 @@ const ReportSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
+const NotificationSchema = new mongoose.Schema({
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    type: {
+        type: String,
+        enum: ['claim_approved', 'claim_rejected', 'claim_pending', 'other'],
+        required: true
+    },
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    link: { type: String }, // Link to business or relevant page
+    is_read: { type: Boolean, default: false },
+    metadata: { type: Map, of: mongoose.Schema.Types.Mixed }, // Additional data like business_id, business_name
+}, { timestamps: true });
+
 // Prevent overwrite on hot reload
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Business = mongoose.models.Business || mongoose.model('Business', BusinessSchema);
 const Review = mongoose.models.Review || mongoose.model('Review', ReviewSchema);
 const Report = mongoose.models.Report || mongoose.model('Report', ReportSchema);
+const Notification = mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
 
-export { User, Business, Review, Report };
+export { User, Business, Review, Report, Notification };

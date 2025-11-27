@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from './ui';
 import { User, LogOut, LayoutDashboard, Shield, AlertTriangle } from 'lucide-react';
+import NotificationDropdown from './NotificationDropdown';
 
 export default function Navbar() {
     const { data: session } = useSession();
@@ -45,6 +46,7 @@ export default function Navbar() {
                                     </div>
 
                                     <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+                                        <NotificationDropdown />
                                         <div className="hidden md:block text-right">
                                             <div className="text-sm font-bold text-slate-900">{session.user.name}</div>
                                             <div className="text-xs text-slate-500">{session.user.role}</div>

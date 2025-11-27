@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
-import { Report, Review } from '@/lib/models';
+import { Report, Review, User, Notification } from '@/lib/models';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
@@ -20,7 +20,7 @@ export async function POST(request) {
         }
 
         // Check if review exists
-        const review = await Review.findById(reviewId);
+        const review = await Review.findById(reviewId).populate('business_id', 'name');
         if (!review) {
             return NextResponse.json({ error: 'Review not found' }, { status: 404 });
         }
@@ -37,6 +37,28 @@ export async function POST(request) {
             reason,
             custom_reason: customReason,
         });
+
+        // Create notifications for all Super Admins
+        const superAdmins = await User.find({ role: 'Super Admin' });
+        const notificationPromises = superAdmins.map(admin =>
+            Notification.create({
+                user_id: admin._id,
+                type: 'other',
+                title: 'New Review Report',
+                message: `${session.user.name} reported a review for "${reason}". ${customReason ? `Reason: ${customReason}` : ''}`,
+                link: `/admin`,
+                metadata: {
+                    report_id: report._id.toString(),
+                    review_id: reviewId,
+                    business_id: review.business_id?._id?.toString(),
+                    business_name: review.business_id?.name,
+                    reporter_id: session.user.id,
+                    reporter_name: session.user.name,
+                    reason: reason
+                }
+            })
+        );
+        await Promise.all(notificationPromises);
 
         return NextResponse.json({ success: true, report });
     } catch (error) {

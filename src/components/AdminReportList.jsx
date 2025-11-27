@@ -13,6 +13,13 @@ export default function AdminReportList() {
 
     useEffect(() => {
         fetchReports();
+
+        // Auto-refresh reports every 15 seconds for real-time updates
+        const interval = setInterval(() => {
+            fetchReports();
+        }, 15000); // 15 seconds
+
+        return () => clearInterval(interval);
     }, []);
 
     const fetchReports = async () => {
@@ -70,8 +77,8 @@ export default function AdminReportList() {
                             <tr key={report._id} className={report.status === 'pending' ? 'bg-red-50' : ''}>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${report.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                            report.status === 'resolved' ? 'bg-green-100 text-green-800' :
-                                                'bg-gray-100 text-gray-800'
+                                        report.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                                            'bg-gray-100 text-gray-800'
                                         }`}>
                                         {report.status}
                                     </span>

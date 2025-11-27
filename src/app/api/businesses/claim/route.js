@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import dbConnect from '@/lib/mongodb';
-import { Business } from '@/lib/models';
+import { Business, User, Notification } from '@/lib/models';
 import crypto from 'crypto';
 import { sendVerificationEmail } from '@/lib/email';
 
@@ -46,6 +46,11 @@ export async function POST(request) {
             if (!data) return NextResponse.json({ error: 'Proof URL is required' }, { status: 400 });
             business.claim_proof = data;
         } else if (method === 'dns') {
+            if (!data) return NextResponse.json({ error: 'Domain is required' }, { status: 400 });
+
+            // Store the domain used for verification
+            business.claim_domain = data;
+
             // Generate a unique TXT record token if not already present
             let token = business.claim_verification_data;
             if (!token || !token.startsWith('shwereview-verification=')) {
@@ -55,6 +60,9 @@ export async function POST(request) {
             responseData = { token };
         } else if (method === 'email') {
             if (!data) return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+
+            // Store the email used for verification
+            business.claim_email = data;
 
             const code = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -71,6 +79,26 @@ export async function POST(request) {
         }
 
         await business.save();
+
+        // Create notifications for all Super Admins
+        const superAdmins = await User.find({ role: 'Super Admin' });
+        const notificationPromises = superAdmins.map(admin =>
+            Notification.create({
+                user_id: admin._id,
+                type: 'claim_pending',
+                title: 'New Business Claim',
+                message: `${session.user.name} has submitted a claim for "${business.name}" using ${method} verification.`,
+                link: `/admin`,
+                metadata: {
+                    business_id: business._id.toString(),
+                    business_name: business.name,
+                    claimant_id: session.user.id,
+                    claimant_name: session.user.name,
+                    method: method
+                }
+            })
+        );
+        await Promise.all(notificationPromises);
 
         return NextResponse.json({ success: true, business, ...responseData });
     } catch (error) {

@@ -54,10 +54,19 @@ export const authOptions = {
                 token.account_status = user.account_status;
                 token.warning_count = user.warning_count;
             }
+
             // Update token if session is updated (e.g. via update())
-            if (trigger === "update" && session) {
-                return { ...token, ...session.user };
+            if (trigger === "update") {
+                // Fetch fresh user data from database
+                await dbConnect();
+                const freshUser = await User.findById(token.id);
+                if (freshUser) {
+                    token.role = freshUser.role;
+                    token.account_status = freshUser.account_status;
+                    token.warning_count = freshUser.warning_count;
+                }
             }
+
             return token;
         },
         async session({ session, token }) {

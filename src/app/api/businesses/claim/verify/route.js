@@ -40,6 +40,7 @@ export async function POST(request) {
 
                 if (flatRecords.includes(expectedToken)) {
                     business.claim_verification_status = 'verified';
+                    business.claim_domain = domain; // Store verified domain
                     await business.save();
                     return NextResponse.json({ success: true, message: 'DNS verified successfully' });
                 } else {

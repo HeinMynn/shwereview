@@ -18,7 +18,11 @@ export default async function AdminPage() {
 
     // Fetch data directly from DB
     const users = await User.find({}).sort({ createdAt: -1 }).lean();
-    const businesses = await Business.find({}).populate('owner_id', 'name email').sort({ createdAt: -1 }).lean();
+    const businesses = await Business.find({})
+        .populate('owner_id', 'name email')
+        .populate('claimant_id', 'name email') // Add claimant details
+        .sort({ createdAt: -1 })
+        .lean();
 
     // Serialize data to pass to client component
     const serializedUsers = JSON.parse(JSON.stringify(users));
