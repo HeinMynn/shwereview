@@ -11,6 +11,12 @@ export default function Navbar() {
 
     return (
         <>
+            {session?.user?.account_status === 'suspended' && (
+                <div className="bg-red-600 text-white text-center py-2 px-4 text-sm font-bold">
+                    <Shield className="w-4 h-4 inline-block mr-2" />
+                    Your account has been suspended. You cannot perform any actions. Please contact support.
+                </div>
+            )}
             {session?.user?.account_status === 'warning' && (
                 <div className="bg-yellow-500 text-white text-center py-2 px-4 text-sm font-bold">
                     <AlertTriangle className="w-4 h-4 inline-block mr-2" />

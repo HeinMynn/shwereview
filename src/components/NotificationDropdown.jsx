@@ -42,8 +42,24 @@ export default function NotificationDropdown() {
             const res = await fetch('/api/notifications?unread_only=true');
             const data = await res.json();
             if (data.notifications) {
-                setNotifications(data.notifications);
-                setUnreadCount(data.notifications.filter(n => !n.is_read).length);
+                let fetchedNotifications = data.notifications;
+
+                // Inject persistent suspended notification if user is suspended
+                if (session?.user?.account_status === 'suspended') {
+                    const suspendedNotification = {
+                        _id: 'suspended-alert',
+                        title: 'Account Suspended',
+                        message: 'Your account has been suspended due to policy violations. You cannot perform actions.',
+                        type: 'alert',
+                        is_read: false,
+                        createdAt: new Date().toISOString(),
+                        link: '/community-guidelines'
+                    };
+                    fetchedNotifications = [suspendedNotification, ...fetchedNotifications];
+                }
+
+                setNotifications(fetchedNotifications);
+                setUnreadCount(fetchedNotifications.filter(n => !n.is_read).length);
 
                 // Check if there's a new claim_approved notification - refresh session to update role
                 const hasNewApproval = data.notifications.some(n =>
