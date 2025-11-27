@@ -7,10 +7,10 @@ import DashboardChart from '@/components/DashboardChart';
 import DashboardReviews from '@/components/DashboardReviews';
 
 export default function DashboardClient({ data }) {
-    const { businesses, allReviews, reviewsByBusiness, submissions, myReviews, user } = data;
+    const { businesses = [], allReviews, reviewsByBusiness, submissions, myReviews, user } = data;
 
     const [selectedBusinessId, setSelectedBusinessId] = useState(
-        businesses.length > 0 ? businesses[0]._id.toString() : null
+        businesses?.length > 0 ? businesses[0]._id.toString() : null
     );
 
     if (!businesses || businesses.length === 0) {
@@ -35,8 +35,8 @@ export default function DashboardClient({ data }) {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <span className={`px-2 py-1 rounded text-xs font-bold capitalize ${sub.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                                        sub.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                                            'bg-yellow-100 text-yellow-800'
+                                                    sub.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                        'bg-yellow-100 text-yellow-800'
                                                     }`}>
                                                     {sub.status}
                                                 </span>
@@ -162,8 +162,8 @@ export default function DashboardClient({ data }) {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className={`px-2 py-1 rounded text-xs font-bold capitalize ${sub.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                                    sub.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                                        'bg-yellow-100 text-yellow-800'
+                                                sub.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                    'bg-yellow-100 text-yellow-800'
                                                 }`}>
                                                 {sub.status}
                                             </span>
