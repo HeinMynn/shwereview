@@ -51,3 +51,10 @@ export const Input = React.forwardRef(({ className, type, ...props }, ref) => (
     />
 ))
 Input.displayName = "Input"
+
+export const Skeleton = ({ className, ...props }) => (
+    <div
+        className={cn("animate-pulse rounded-md bg-slate-200", className)}
+        {...props}
+    />
+)
