@@ -123,8 +123,11 @@ BusinessSchema.index({ category: 1 });
 BusinessSchema.index({ owner_id: 1 });
 BusinessSchema.index({ status: 1 });
 BusinessSchema.index({ aggregate_rating: -1 }); // For sorting by rating
+BusinessSchema.index({ submitted_by: 1 }); // For dashboard queries
+BusinessSchema.index({ createdAt: -1 }); // For sorting by date
 ReviewSchema.index({ business_id: 1 });
 ReviewSchema.index({ user_id: 1 });
+ReviewSchema.index({ createdAt: -1 }); // For sorting by date
 ReportSchema.index({ review_id: 1 });
 NotificationSchema.index({ user_id: 1 });
 

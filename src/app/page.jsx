@@ -5,7 +5,7 @@ import { Search, Star, MapPin, TrendingUp } from 'lucide-react';
 import dbConnect from '@/lib/mongodb';
 import { Business } from '@/lib/models';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 async function getBusinesses() {
     await dbConnect();

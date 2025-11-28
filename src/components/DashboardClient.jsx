@@ -8,22 +8,17 @@ import DashboardReviews from '@/components/DashboardReviews';
 import Link from 'next/link';
 
 export default function DashboardClient({ data }) {
-    const { businesses = [], allReviews, reviewsByBusiness, submissions, myReviews, user } = data;
+    const { businesses = [], recentReviews, chartData, totalReviewsReceived, submissions, myReviews, user } = data;
     const [activeTab, setActiveTab] = useState('overview');
 
     // Derived state for Overview
     const totalReviewsGiven = myReviews.length;
     const totalBusinessesOwned = businesses.length;
-    const totalReviewsReceived = allReviews?.length || 0;
+    // totalReviewsReceived is now passed from server
 
     // Calculate average rating across all owned businesses
     const totalRating = businesses.reduce((acc, b) => acc + (b.aggregate_rating || 0), 0);
     const avgRating = totalBusinessesOwned > 0 ? (totalRating / totalBusinessesOwned).toFixed(1) : 0;
-
-    // If no businesses, show empty state in Overview tab instead of Profile View
-    // The redirect in page.jsx handles the main redirection, but this is a fallback
-    // or for the "Add Business" flow where they might land here temporarily.
-
 
     // DASHBOARD VIEW (For Business Owners)
     const Tabs = () => (
@@ -122,56 +117,29 @@ export default function DashboardClient({ data }) {
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <Card className="p-0 overflow-hidden">
                                     {(() => {
-                                        // Prepare Chart Data: Average Rating Over Time PER BUSINESS
-                                        // 1. Group reviews by date and business
-                                        const groupedData = {};
-                                        const businessSet = new Set();
-                                        const businessNames = {};
+                                        // Use pre-calculated chart data from server
+                                        // We need to reconstruct the series for the chart component
+                                        // The chartData is already an array of objects: [{ date: '...', bizId1: 4.5, bizId2: 3.0 }, ...]
 
-                                        allReviews?.forEach(review => {
-                                            const date = new Date(review.createdAt).toLocaleDateString();
-                                            const bizId = review.business_id?._id;
-                                            const bizName = review.business_id?.name || 'Unknown';
+                                        if (!chartData || chartData.length === 0) {
+                                            return (
+                                                <div className="p-6 text-center text-gray-500">
+                                                    No rating data available for the last 7 days.
+                                                </div>
+                                            );
+                                        }
 
-                                            if (!bizId) return;
-
-                                            businessSet.add(bizId);
-                                            businessNames[bizId] = bizName;
-
-                                            if (!groupedData[date]) {
-                                                groupedData[date] = {};
-                                            }
-                                            if (!groupedData[date][bizId]) {
-                                                groupedData[date][bizId] = { sum: 0, count: 0 };
-                                            }
-                                            groupedData[date][bizId].sum += review.overall_rating;
-                                            groupedData[date][bizId].count += 1;
-                                        });
-
-                                        // 2. Format for Recharts
-                                        const formattedData = Object.entries(groupedData)
-                                            .map(([date, bizData]) => {
-                                                const entry = { date };
-                                                Object.entries(bizData).forEach(([bizId, { sum, count }]) => {
-                                                    entry[bizId] = Number((sum / count).toFixed(1));
-                                                });
-                                                return entry;
-                                            })
-                                            .sort((a, b) => new Date(a.date) - new Date(b.date))
-                                            .slice(-7); // Last 7 days
-
-                                        // 3. Define Series (Lines)
                                         const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088fe', '#00c49f'];
-                                        const series = Array.from(businessSet).map((bizId, index) => ({
-                                            key: bizId,
-                                            name: businessNames[bizId],
+                                        const series = businesses.map((biz, index) => ({
+                                            key: biz._id.toString(),
+                                            name: biz.name,
                                             color: colors[index % colors.length]
                                         }));
 
                                         return (
                                             <DashboardChart
                                                 title="Rating Trends by Business"
-                                                data={formattedData.length > 0 ? formattedData : []}
+                                                data={chartData}
                                                 series={series}
                                             />
                                         );
@@ -179,8 +147,8 @@ export default function DashboardClient({ data }) {
                                 </Card>
                                 <Card className="p-6">
                                     <h3 className="text-lg font-bold mb-4">Recent Reviews Received</h3>
-                                    {allReviews && allReviews.length > 0 ? (
-                                        <DashboardReviews reviews={allReviews.slice(0, 3)} />
+                                    {recentReviews && recentReviews.length > 0 ? (
+                                        <DashboardReviews reviews={recentReviews} />
                                     ) : (
                                         <p className="text-slate-600">No reviews received yet.</p>
                                     )}
