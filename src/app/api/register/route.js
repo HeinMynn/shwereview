@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import { User } from '@/lib/models';
 import bcrypt from 'bcryptjs';
+import { sendVerificationEmail } from '@/lib/email';
+import crypto from 'crypto';
 
 export async function POST(request) {
     try {
@@ -19,14 +21,30 @@ export async function POST(request) {
 
         const passwordHash = await bcrypt.hash(password, 10);
 
+        // Generate verification code
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const verificationTokenExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
         const user = await User.create({
             name,
             email,
             password_hash: passwordHash,
             role: 'User', // Default role
+            email_verified: false,
+            verification_token: verificationCode,
+            verification_token_expires: verificationTokenExpires,
         });
 
-        return NextResponse.json({ success: true, user: { id: user._id, name: user.name, email: user.email } });
+        // Send verification email
+        const emailSent = await sendVerificationEmail(email, verificationCode, 'register');
+
+        if (!emailSent) {
+            // Optionally delete the user if email fails, or just let them retry
+            // For now, we'll return success but warn about email
+            console.error('Failed to send registration email to:', email);
+        }
+
+        return NextResponse.json({ success: true, userId: user._id });
     } catch (error) {
         console.error('Registration error:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -9,6 +9,8 @@ import Toast from '@/components/Toast';
 import { Pencil, Star, MapPin, Share2, Flag, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
+import Lightbox from '@/components/Lightbox';
+
 export default function BusinessContent({ business, initialReviews }) {
     const { data: session } = useSession();
     const [reviews, setReviews] = useState(initialReviews);
@@ -17,6 +19,17 @@ export default function BusinessContent({ business, initialReviews }) {
     const [replyingReviewId, setReplyingReviewId] = useState(null);
 
     const [toast, setToast] = useState(null);
+
+    // Lightbox State
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [lightboxImages, setLightboxImages] = useState([]);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
+
+    const openLightbox = (images, index) => {
+        setLightboxImages(images);
+        setLightboxIndex(index);
+        setLightboxOpen(true);
+    };
 
     // Sync state with props
     useEffect(() => {
@@ -70,6 +83,15 @@ export default function BusinessContent({ business, initialReviews }) {
     return (
         <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+            {lightboxOpen && (
+                <Lightbox
+                    images={lightboxImages}
+                    initialIndex={lightboxIndex}
+                    onClose={() => setLightboxOpen(false)}
+                />
+            )}
+
             {reportingReviewId && (
                 <ReportModal
                     reviewId={reportingReviewId}
@@ -160,7 +182,7 @@ export default function BusinessContent({ business, initialReviews }) {
                                         src={url}
                                         alt={`Review image ${index + 1}`}
                                         className="h-24 w-24 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
-                                        onClick={() => window.open(url, '_blank')}
+                                        onClick={() => openLightbox(review.media, index)}
                                     />
                                 ))}
                             </div>

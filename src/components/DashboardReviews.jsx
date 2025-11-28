@@ -6,11 +6,24 @@ import Link from 'next/link';
 import { Eye, MessageSquare } from 'lucide-react';
 import Toast from './Toast';
 
+import Lightbox from '@/components/Lightbox';
+
 export default function DashboardReviews({ reviews }) {
     const [replyingTo, setReplyingTo] = useState(null);
     const [replyText, setReplyText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
+
+    // Lightbox State
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [lightboxImages, setLightboxImages] = useState([]);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
+
+    const openLightbox = (images, index) => {
+        setLightboxImages(images);
+        setLightboxIndex(index);
+        setLightboxOpen(true);
+    };
 
     // Local state to update UI immediately after reply
     const [localReviews, setLocalReviews] = useState(reviews.filter(r => !r.is_deleted));
@@ -52,6 +65,15 @@ export default function DashboardReviews({ reviews }) {
     return (
         <div className="space-y-4">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+            {lightboxOpen && (
+                <Lightbox
+                    images={lightboxImages}
+                    initialIndex={lightboxIndex}
+                    onClose={() => setLightboxOpen(false)}
+                />
+            )}
+
             {localReviews.map(review => (
                 <div key={review._id} className="p-4 border rounded-lg bg-white relative">
                     <div className="flex justify-between items-start mb-2">
@@ -84,7 +106,7 @@ export default function DashboardReviews({ reviews }) {
                                     src={url}
                                     alt={`Review image ${index + 1}`}
                                     className="h-20 w-20 object-cover rounded border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
-                                    onClick={() => window.open(url, '_blank')}
+                                    onClick={() => openLightbox(review.media, index)}
                                 />
                             ))}
                         </div>

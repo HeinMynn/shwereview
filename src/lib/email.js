@@ -1,34 +1,27 @@
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
-const port = parseInt(process.env.SMTP_PORT || '587');
-const secure = process.env.SMTP_SECURE === 'true' || port === 465;
+// Initialize SendGrid with API Key
+if (process.env.SENDGRID_API_KEY) {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+} else {
+    console.warn('SENDGRID_API_KEY is missing in environment variables.');
+}
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: port,
-    secure: secure, // true for 465, false for other ports
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
-});
-
-export async function sendVerificationEmail(to, code) {
+export async function sendVerificationEmail(to, code, type = 'claim') {
     try {
-        console.log('Attempting to send email with config:', {
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
-            secure: process.env.SMTP_SECURE,
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS ? '****' : 'MISSING'
-        });
+        if (!process.env.SENDGRID_API_KEY) {
+            console.error('SendGrid API Key is missing. Cannot send email.');
+            return false;
+        }
 
-        const info = await transporter.sendMail({
-            from: process.env.SMTP_FROM || '"ShweReview" <noreply@shwereview.com>',
-            to,
-            subject: 'Verify your Business Claim - ShweReview',
-            text: `Your verification code is: ${code}`,
-            html: `
+        console.log('Attempting to send email via SendGrid to:', to);
+
+        let subject = 'Verify your Business Claim - ShweReview';
+        let htmlContent = '';
+
+        if (type === 'claim') {
+            subject = 'Verify your Business Claim - ShweReview';
+            htmlContent = `
                 <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
                     <h2 style="color: #4F46E5;">ShweReview Business Verification</h2>
                     <p>You have requested to claim a business on ShweReview.</p>
@@ -38,13 +31,49 @@ export async function sendVerificationEmail(to, code) {
                     </div>
                     <p>If you did not request this, please ignore this email.</p>
                 </div>
-            `,
-        });
-        console.log('Message sent: %s', info.messageId);
+            `;
+        } else if (type === 'register') {
+            subject = 'Verify your Account - ShweReview';
+            htmlContent = `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                    <h2 style="color: #4F46E5;">Welcome to ShweReview!</h2>
+                    <p>Thank you for registering. Please verify your email address to complete your account setup.</p>
+                    <p>Your verification code is:</p>
+                    <div style="background-color: #F3F4F6; padding: 15px; border-radius: 5px; font-size: 24px; font-weight: bold; text-align: center; letter-spacing: 5px; margin: 20px 0;">
+                        ${code}
+                    </div>
+                    <p>This code will expire in 15 minutes.</p>
+                    <p>If you did not create an account, please ignore this email.</p>
+                </div>
+            `;
+        }
+
+        const fromEmail = process.env.SMTP_FROM || 'noreply@shwereview.com';
+        const fromName = process.env.SMTP_FROM_NAME || 'ShweReview';
+
+        let fromAddress = fromEmail;
+
+        // If SMTP_FROM is just an email (no name part), add the name
+        if (!fromEmail.includes('<') && !fromEmail.includes('"')) {
+            fromAddress = `"${fromName}" <${fromEmail}>`;
+        }
+
+        const msg = {
+            to,
+            from: fromAddress,
+            subject,
+            text: `Your verification code is: ${code}`,
+            html: htmlContent,
+        };
+
+        await sgMail.send(msg);
+        console.log('Email sent successfully to:', to);
         return true;
     } catch (error) {
-        console.error('Error sending email:', error);
-        if (error.response) console.error('SMTP Response:', error.response);
+        console.error('Error sending email via SendGrid:', error);
+        if (error.response) {
+            console.error('SendGrid Response Body:', error.response.body);
+        }
         return false;
     }
 }

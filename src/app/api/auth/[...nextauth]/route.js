@@ -25,6 +25,10 @@ export const authOptions = {
                     throw new Error('Your account has been banned.');
                 }
 
+                if (user.email_verified === false) {
+                    throw new Error('Please verify your email address.');
+                }
+
                 // Check if password matches
                 // In a real app, use bcrypt.compare
                 // For now, since we might have plain text from old seed, we'll check both

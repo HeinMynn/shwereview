@@ -7,13 +7,33 @@ import { Star, MessageSquare, Shield, LayoutDashboard, LogOut } from 'lucide-rea
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 
+import Lightbox from '@/components/Lightbox';
+
 export default function ProfileClient({ data }) {
     const { user, myReviews: initialMyReviews, mySubmittedBusinesses } = data;
     const myReviews = initialMyReviews.filter(r => !r.is_deleted);
     const [activeTab, setActiveTab] = useState('reviews');
 
+    // Lightbox State
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [lightboxImages, setLightboxImages] = useState([]);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
+
+    const openLightbox = (images, index) => {
+        setLightboxImages(images);
+        setLightboxIndex(index);
+        setLightboxOpen(true);
+    };
+
     return (
         <main className="min-h-screen bg-slate-50 p-4 md:p-8">
+            {lightboxOpen && (
+                <Lightbox
+                    images={lightboxImages}
+                    initialIndex={lightboxIndex}
+                    onClose={() => setLightboxOpen(false)}
+                />
+            )}
             <div className="max-w-3xl mx-auto">
                 <Card className="p-8 mb-8 text-center relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-10"></div>
@@ -137,7 +157,22 @@ export default function ProfileClient({ data }) {
                                                     <Button size="sm" variant="outline">View</Button>
                                                 </Link>
                                             </div>
-                                            <p className="text-gray-900 line-clamp-3">{review.text_content}</p>
+                                            <p className="text-gray-900 line-clamp-3 mb-3">{review.text_content}</p>
+
+                                            {/* Display Uploaded Images */}
+                                            {review.media && review.media.length > 0 && (
+                                                <div className="flex gap-2 overflow-x-auto pb-2">
+                                                    {review.media.map((url, index) => (
+                                                        <img
+                                                            key={index}
+                                                            src={url}
+                                                            alt={`Review image ${index + 1}`}
+                                                            className="h-16 w-16 object-cover rounded border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
+                                                            onClick={() => openLightbox(review.media, index)}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
                                         </Card>
                                     ))}
                                 </div>

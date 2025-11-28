@@ -17,6 +17,9 @@ const UserSchema = new mongoose.Schema({
         default: 'active',
     },
     warning_count: { type: Number, default: 0 },
+    email_verified: { type: Boolean, default: false },
+    verification_token: { type: String },
+    verification_token_expires: { type: Date },
 }, { timestamps: true });
 
 const BusinessSchema = new mongoose.Schema({
