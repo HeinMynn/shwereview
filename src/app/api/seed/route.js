@@ -55,6 +55,7 @@ export async function POST() {
             address: '123 Culinary Ave',
             category: 'restaurant',
             owner_id: owner._id,
+            submitted_by: owner._id,
             is_verified: true,
             status: 'approved',
             claim_status: 'unclaimed',
@@ -67,28 +68,30 @@ export async function POST() {
             address: '456 Industrial Blvd',
             category: 'logistics',
             owner_id: owner._id,
+            submitted_by: owner._id,
             is_verified: true,
             status: 'approved',
             claim_status: 'unclaimed',
             images: ['https://placehold.co/600x400/blue/white?text=Logistics'],
         });
 
-        const retail = await Business.create({
-            name: 'Urban Threads',
-            description: 'Trendy fashion for everyone.',
-            address: '789 Fashion St',
-            category: 'retail',
+        const shop = await Business.create({
+            name: 'Yangon Supermarket',
+            description: 'Best grocery store in town.',
+            address: '456 Pyay Road, Yangon',
+            category: 'shop',
             owner_id: owner._id,
+            submitted_by: owner._id,
             is_verified: true,
             status: 'approved',
             claim_status: 'unclaimed',
-            images: ['https://placehold.co/600x400/purple/white?text=Retail'],
+            images: ['https://placehold.co/600x400/purple/white?text=Shop'],
         });
 
         return NextResponse.json({
             success: true,
             message: 'Database seeded successfully',
-            data: { admin, owner, users: [user1, user2], businesses: [restaurant, logistics, retail] }
+            data: { admin, owner, users: [user1, user2], businesses: [restaurant, logistics, shop] }
         });
     } catch (error) {
         console.error('Error seeding database:', error);

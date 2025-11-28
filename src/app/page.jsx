@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button, Card } from '@/components/ui';
 import { Search, Star, MapPin, TrendingUp } from 'lucide-react';
 import dbConnect from '@/lib/mongodb';
@@ -92,10 +93,12 @@ export default async function Home() {
                                     <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
                                         <div className="h-48 bg-gradient-to-r from-indigo-500 to-purple-500 relative overflow-hidden">
                                             {business.images?.[0] ? (
-                                                <img
+                                                <Image
                                                     src={business.images[0]}
                                                     alt={business.name}
-                                                    className="w-full h-full object-cover"
+                                                    fill
+                                                    className="object-cover"
+                                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-white text-4xl font-bold">
@@ -150,6 +153,6 @@ export default async function Home() {
                     </Link>
                 </div>
             </section>
-        </main>
+        </main >
     );
 }

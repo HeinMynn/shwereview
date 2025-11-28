@@ -1,40 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import useSWR, { mutate } from 'swr';
+import { useState } from 'react';
 import { Button } from '@/components/ui';
 import { CheckCircle, XCircle, AlertTriangle, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import Toast from './Toast';
 
+const fetcher = (...args) => fetch(...args).then(res => res.json());
+
 export default function AdminReportList() {
-    const [reports, setReports] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { data, error } = useSWR('/api/admin/reports', fetcher, {
+        refreshInterval: 15000,
+        revalidateOnFocus: true,
+    });
+
+    const reports = data?.reports || [];
+    const loading = !data && !error;
     const [toast, setToast] = useState(null);
-
-    useEffect(() => {
-        fetchReports();
-
-        // Auto-refresh reports every 15 seconds for real-time updates
-        const interval = setInterval(() => {
-            fetchReports();
-        }, 15000); // 15 seconds
-
-        return () => clearInterval(interval);
-    }, []);
-
-    const fetchReports = async () => {
-        try {
-            const res = await fetch('/api/admin/reports');
-            const data = await res.json();
-            if (data.success) {
-                setReports(data.reports);
-            }
-        } catch (error) {
-            console.error('Error fetching reports:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleStatusUpdate = async (reportId, newStatus) => {
         try {
@@ -45,9 +28,7 @@ export default function AdminReportList() {
             });
 
             if (res.ok) {
-                setReports(reports.map(r =>
-                    r._id === reportId ? { ...r, status: newStatus } : r
-                ));
+                mutate('/api/admin/reports');
                 setToast({ message: `Report marked as ${newStatus}`, type: 'success' });
             }
         } catch (error) {

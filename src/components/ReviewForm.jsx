@@ -8,20 +8,29 @@ import Link from 'next/link';
 
 const CATEGORY_METRICS = {
     restaurant: [
-        { key: 'food_quality', label: 'Food Quality' },
-        { key: 'ambiance', label: 'Ambiance' },
-        { key: 'service', label: 'Service' },
-        { key: 'value', label: 'Value' },
+        { key: 'taste', label: 'Taste (အရသာ)' },
+        { key: 'food_quality', label: 'Food Quality (အစားအသောက် အရည်အသွေး)' },
+        { key: 'ambiance', label: 'Ambiance (ဆိုင်အပြင်အဆင်)' },
+        { key: 'service', label: 'Service (ဝန်ဆောင်မှု)' },
+        { key: 'value', label: 'Value (တန်ဖိုး)' },
     ],
-    retail: [
-        { key: 'inventory', label: 'Inventory Selection' },
-        { key: 'organization', label: 'Store Organization' },
-        { key: 'checkout_speed', label: 'Checkout Speed' },
+    shop: [
+        { key: 'quality', label: 'Quality (အရည်အသွေး)' },
+        { key: 'value', label: 'Value (တန်ဖိုး)' },
+        { key: 'checkout_speed', label: 'Checkout Speed (ငွေရှင်းမြန်ဆန်မှု)' },
+        { key: 'service', label: 'Service (ဝန်ဆောင်မှု)' },
     ],
     logistics: [
-        { key: 'timeliness', label: 'Timeliness' },
-        { key: 'handling', label: 'Item Handling' },
-        { key: 'last_mile', label: 'Last Mile Experience' },
+        { key: 'timeliness', label: 'Timeliness (အချိန်မှန်ကန်မှု)' },
+        { key: 'handling', label: 'Item Handling (ပစ္စည်းကိုင်တွယ်မှု)' },
+        { key: 'service', label: 'Service (ဝန်ဆောင်မှု)' },
+        { key: 'value', label: 'Value (တန်ဖိုး)' },
+    ],
+    education: [
+        { key: 'teaching_quality', label: 'Teaching Quality (သင်ကြားမှု အရည်အသွေး)' },
+        { key: 'student_support', label: 'Student Support (ကျောင်းသားပံ့ပိုးမှု)' },
+        { key: 'facilities', label: 'Facilities (အထောက်အကူပြုပစ္စည်းများ)' },
+        { key: 'environment', label: 'Environment (ပတ်ဝန်းကျင်)' },
     ],
 };
 

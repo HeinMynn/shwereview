@@ -26,55 +26,38 @@ export default function ClaimBusinessPage({ params }) {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    const handleFileUpload = async (e) => {
+    const handleFileUpload = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validate file size (5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            setError('File size must be less than 5MB');
+        // Validate file size (2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            setError('File size must be less than 2MB');
+            return;
+        }
+
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+            setError('Only JPG, PNG, and GIF files are allowed');
             return;
         }
 
         setLoading(true);
-        setUploadProgress(0);
         setError('');
+        setUploadProgress(0);
 
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            const xhr = new XMLHttpRequest();
-
-            xhr.upload.addEventListener('progress', (e) => {
-                if (e.lengthComputable) {
-                    const percentComplete = (e.loaded / e.total) * 100;
-                    setUploadProgress(Math.round(percentComplete));
-                }
-            });
-
-            xhr.addEventListener('load', () => {
-                if (xhr.status === 200) {
-                    const response = JSON.parse(xhr.responseText);
-                    setDocumentUrl(response.url);
-                    setUploadProgress(100);
-                } else {
-                    setError('Upload failed. Please try again.');
-                }
-                setLoading(false);
-            });
-
-            xhr.addEventListener('error', () => {
-                setError('Upload failed. Please try again.');
-                setLoading(false);
-            });
-
-            xhr.open('POST', '/api/upload');
-            xhr.send(formData);
-        } catch (err) {
-            setError('Upload failed. Please try again.');
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setDocumentUrl(reader.result); // Store Base64 string
+            setUploadProgress(100);
             setLoading(false);
-        }
+        };
+        reader.onerror = () => {
+            setError('Failed to read file');
+            setLoading(false);
+        };
+        reader.readAsDataURL(file);
     };
 
     const handleInitiateClaim = async (e) => {
@@ -237,12 +220,12 @@ export default function ClaimBusinessPage({ params }) {
                                     <div>
                                         <input
                                             type="file"
-                                            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                            accept=".jpg,.jpeg,.png,.gif"
                                             onChange={handleFileUpload}
                                             className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2"
                                         />
                                         <p className="text-xs text-gray-500 mt-2">
-                                            Accepted formats: PDF, JPG, PNG, DOC (Max 5MB)
+                                            Accepted formats: JPG, PNG, GIF (Max 2MB)
                                         </p>
                                         {uploadProgress > 0 && uploadProgress < 100 && (
                                             <div className="mt-2">
@@ -257,7 +240,7 @@ export default function ClaimBusinessPage({ params }) {
                                         )}
                                         {documentUrl && (
                                             <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
-                                                ✓ File uploaded successfully
+                                                ✓ File selected
                                             </div>
                                         )}
                                     </div>

@@ -29,7 +29,7 @@ const BusinessSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        enum: ['restaurant', 'retail', 'logistics'],
+        enum: ['restaurant', 'shop', 'logistics', 'education'],
         required: true,
     },
     images: [{ type: String }],
@@ -108,6 +108,16 @@ const NotificationSchema = new mongoose.Schema({
     is_read: { type: Boolean, default: false },
     metadata: { type: Map, of: mongoose.Schema.Types.Mixed }, // Additional data like business_id, business_name
 }, { timestamps: true });
+
+// Indexes
+BusinessSchema.index({ category: 1 });
+BusinessSchema.index({ owner_id: 1 });
+BusinessSchema.index({ status: 1 });
+BusinessSchema.index({ aggregate_rating: -1 }); // For sorting by rating
+ReviewSchema.index({ business_id: 1 });
+ReviewSchema.index({ user_id: 1 });
+ReportSchema.index({ review_id: 1 });
+NotificationSchema.index({ user_id: 1 });
 
 // Prevent overwrite on hot reload
 const User = mongoose.models.User || mongoose.model('User', UserSchema);

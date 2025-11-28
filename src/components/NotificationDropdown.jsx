@@ -1,30 +1,64 @@
 'use client';
 
+import useSWR, { mutate } from 'swr';
 import { useState, useEffect, useRef } from 'react';
-import { useSession, update } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Bell, X, CheckCheck } from 'lucide-react';
+
+const fetcher = (...args) => fetch(...args).then(res => res.json());
 
 export default function NotificationDropdown() {
     const { data: session, update } = useSession();
     const [isOpen, setIsOpen] = useState(false);
-    const [notifications, setNotifications] = useState([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [loading, setLoading] = useState(false);
     const dropdownRef = useRef(null);
 
-    useEffect(() => {
-        if (session) {
-            fetchNotifications();
-
-            // Poll for new notifications every 30 seconds
-            const interval = setInterval(() => {
-                fetchNotifications();
-            }, 30000); // 30 seconds
-
-            return () => clearInterval(interval);
+    const { data, error } = useSWR(
+        session ? '/api/notifications?unread_only=true' : null,
+        fetcher,
+        {
+            refreshInterval: 30000, // Poll every 30 seconds
+            revalidateOnFocus: true,
         }
-    }, [session]);
+    );
+
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const loading = !data && !error;
+
+    useEffect(() => {
+        if (data?.notifications) {
+            let fetchedNotifications = data.notifications;
+
+            // Inject persistent suspended notification if user is suspended
+            if (session?.user?.account_status === 'suspended') {
+                const suspendedNotification = {
+                    _id: 'suspended-alert',
+                    title: 'Account Suspended',
+                    message: 'Your account has been suspended due to policy violations. You cannot perform actions.',
+                    type: 'alert',
+                    is_read: false,
+                    createdAt: new Date().toISOString(),
+                    link: '/community-guidelines'
+                };
+                // Check if already exists to avoid duplicates if re-rendering
+                if (!fetchedNotifications.find(n => n._id === 'suspended-alert')) {
+                    fetchedNotifications = [suspendedNotification, ...fetchedNotifications];
+                }
+            }
+
+            setNotifications(fetchedNotifications);
+            setUnreadCount(fetchedNotifications.filter(n => !n.is_read).length);
+
+            // Check if there's a new claim_approved notification - refresh session to update role
+            const hasNewApproval = data.notifications.some(n =>
+                n.type === 'claim_approved' && !n.is_read
+            );
+            if (hasNewApproval && session) {
+                update();
+            }
+        }
+    }, [data, session, update]);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -37,46 +71,6 @@ export default function NotificationDropdown() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const fetchNotifications = async () => {
-        try {
-            const res = await fetch('/api/notifications?unread_only=true');
-            const data = await res.json();
-            if (data.notifications) {
-                let fetchedNotifications = data.notifications;
-
-                // Inject persistent suspended notification if user is suspended
-                if (session?.user?.account_status === 'suspended') {
-                    const suspendedNotification = {
-                        _id: 'suspended-alert',
-                        title: 'Account Suspended',
-                        message: 'Your account has been suspended due to policy violations. You cannot perform actions.',
-                        type: 'alert',
-                        is_read: false,
-                        createdAt: new Date().toISOString(),
-                        link: '/community-guidelines'
-                    };
-                    fetchedNotifications = [suspendedNotification, ...fetchedNotifications];
-                }
-
-                setNotifications(fetchedNotifications);
-                setUnreadCount(fetchedNotifications.filter(n => !n.is_read).length);
-
-                // Check if there's a new claim_approved notification - refresh session to update role
-                const hasNewApproval = data.notifications.some(n =>
-                    n.type === 'claim_approved' && !n.is_read
-                );
-                if (hasNewApproval && session) {
-                    // Trigger session refresh to get updated user role
-                    await update();
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching notifications:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const markAsRead = async (notificationId) => {
         try {
             const res = await fetch(`/api/notifications/${notificationId}/read`, {
@@ -84,6 +78,8 @@ export default function NotificationDropdown() {
             });
 
             if (res.ok) {
+                mutate('/api/notifications?unread_only=true');
+                // Optimistic update
                 setNotifications(prev =>
                     prev.map(n => n._id === notificationId ? { ...n, is_read: true } : n)
                 );
@@ -95,20 +91,18 @@ export default function NotificationDropdown() {
     };
 
     const markAllAsRead = async () => {
-        setLoading(true);
         try {
             const res = await fetch('/api/notifications/read-all', {
                 method: 'POST',
             });
 
             if (res.ok) {
+                mutate('/api/notifications?unread_only=true');
                 setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
                 setUnreadCount(0);
             }
         } catch (error) {
             console.error('Failed to mark all as read:', error);
-        } finally {
-            setLoading(false);
         }
     };
 

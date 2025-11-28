@@ -1,32 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import useSWR, { mutate } from 'swr';
+import { useState } from 'react';
 import { Button } from '@/components/ui';
 import { CheckCircle, XCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 import Toast from './Toast';
 
+const fetcher = (...args) => fetch(...args).then(res => res.json());
+
 export default function AdminBusinessList({ initialBusinesses }) {
-    const router = useRouter();
-    const [businesses, setBusinesses] = useState(initialBusinesses || []);
+    // Use SWR for real-time updates
+    const { data, error } = useSWR('/api/admin/businesses', fetcher, {
+        fallbackData: { businesses: initialBusinesses },
+        refreshInterval: 15000, // Poll every 15 seconds
+        revalidateOnFocus: true,
+    });
+
+    const businesses = data?.businesses || [];
     const [loadingId, setLoadingId] = useState(null);
     const [toast, setToast] = useState(null);
-
-    // Sync with server data when it changes (e.g. after router.refresh)
-    useEffect(() => {
-        setBusinesses(initialBusinesses);
-    }, [initialBusinesses]);
-
-    // Auto-refresh business list every 15 seconds for real-time updates
-    useEffect(() => {
-        const interval = setInterval(() => {
-            router.refresh(); // Refresh server components data
-        }, 15000); // 15 seconds
-
-        return () => clearInterval(interval);
-    }, [router]);
 
     const updateStatus = async (businessId, newStatus) => {
         console.log('Updating status for:', businessId, 'to', newStatus);
@@ -44,13 +38,9 @@ export default function AdminBusinessList({ initialBusinesses }) {
                 throw new Error(`Server Error (${res.status}): ${data.error || 'Unknown error'}`);
             }
 
-            // Update local state
-            setBusinesses(prev => prev.map(b =>
-                b._id === businessId ? { ...b, status: data.business.status } : b
-            ));
-
-            // Force reload to ensure data consistency
-            window.location.reload();
+            // Optimistic update or revalidate
+            mutate('/api/admin/businesses');
+            setToast({ message: `Status updated to ${newStatus}`, type: 'success' });
         } catch (error) {
             console.error('Update failed:', error);
             setToast({ message: `Failed to update status: ${error.message}`, type: 'error' });
@@ -70,14 +60,8 @@ export default function AdminBusinessList({ initialBusinesses }) {
 
             if (!res.ok) throw new Error('Failed to update');
 
-            const data = await res.json();
-
-            // Update local state
-            setBusinesses(prev => prev.map(b =>
-                b._id === businessId ? { ...b, is_verified: data.business.is_verified } : b
-            ));
-
-            router.refresh(); // Refresh server components if needed
+            mutate('/api/admin/businesses');
+            setToast({ message: 'Verification status updated', type: 'success' });
         } catch (error) {
             console.error(error);
             setToast({ message: 'Failed to update verification status', type: 'error' });
@@ -97,18 +81,8 @@ export default function AdminBusinessList({ initialBusinesses }) {
 
             if (!res.ok) throw new Error('Failed to update claim');
 
-            const data = await res.json();
-
-            // Update local state
-            setBusinesses(prev => prev.map(b =>
-                b._id === businessId ? {
-                    ...b,
-                    claim_status: data.business.claim_status,
-                    owner_id: data.business.owner_id // Update owner if approved
-                } : b
-            ));
-
-            router.refresh();
+            mutate('/api/admin/businesses');
+            setToast({ message: `Claim ${action}ed`, type: 'success' });
         } catch (error) {
             console.error(error);
             setToast({ message: 'Failed to process claim', type: 'error' });

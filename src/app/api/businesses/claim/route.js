@@ -3,8 +3,15 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import dbConnect from '@/lib/mongodb';
 import { Business, User, Notification } from '@/lib/models';
+import { v2 as cloudinary } from 'cloudinary';
 import crypto from 'crypto';
 import { sendVerificationEmail } from '@/lib/email';
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(request) {
     const session = await getServerSession(authOptions);
@@ -43,8 +50,18 @@ export async function POST(request) {
         let responseData = {};
 
         if (method === 'document') {
-            if (!data) return NextResponse.json({ error: 'Proof URL is required' }, { status: 400 });
-            business.claim_proof = data;
+            if (!data) return NextResponse.json({ error: 'Proof file is required' }, { status: 400 });
+
+            try {
+                const uploadResponse = await cloudinary.uploader.upload(data, {
+                    folder: 'shwereview/claims',
+                    resource_type: 'auto', // Auto-detect image type
+                });
+                business.claim_proof = uploadResponse.secure_url;
+            } catch (uploadError) {
+                console.error('Cloudinary upload failed:', uploadError);
+                return NextResponse.json({ error: 'Failed to upload proof document' }, { status: 500 });
+            }
         } else if (method === 'dns') {
             if (!data) return NextResponse.json({ error: 'Domain is required' }, { status: 400 });
 

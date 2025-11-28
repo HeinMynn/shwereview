@@ -3,6 +3,13 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import dbConnect from '@/lib/mongodb';
 import { Business } from '@/lib/models';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(request) {
     const session = await getServerSession(authOptions);
@@ -21,6 +28,21 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
+        let imageUrl = `https://placehold.co/600x400/gray/white?text=${encodeURIComponent(name)}`;
+
+        if (body.image) {
+            try {
+                const uploadResponse = await cloudinary.uploader.upload(body.image, {
+                    folder: 'shwereview/businesses',
+                });
+                imageUrl = uploadResponse.secure_url;
+            } catch (uploadError) {
+                console.error('Cloudinary upload failed:', uploadError);
+                // Continue with placeholder if upload fails, or return error?
+                // For now, let's continue but log it.
+            }
+        }
+
         const business = await Business.create({
             name,
             description,
@@ -31,7 +53,7 @@ export async function POST(request) {
             status: 'pending',
             claim_status: 'unclaimed',
             is_verified: false,
-            images: [`https://placehold.co/600x400/gray/white?text=${encodeURIComponent(name)}`],
+            images: [imageUrl],
         });
 
         return NextResponse.json({ success: true, business });
