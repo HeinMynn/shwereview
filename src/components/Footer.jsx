@@ -39,10 +39,15 @@ export default function Footer() {
                 </div>
 
                 <div className="border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500">
-                    <p>&copy; {new Date().getFullYear()} ShweReview. All rights reserved.</p>
+                    <div className="flex flex-col md:flex-row items-center gap-4">
+                        <p>&copy; {new Date().getFullYear()} ShweReview. All rights reserved.</p>
+                        <span className="hidden md:inline text-slate-700">|</span>
+                        <p className="text-slate-600">ShweReview is a platform for user-generated content. We are not responsible for the opinions expressed by our users.</p>
+                    </div>
                     <div className="flex gap-4 mt-4 md:mt-0">
-                        <Link href="#" className="hover:text-slate-300">Privacy Policy</Link>
-                        <Link href="#" className="hover:text-slate-300">Terms of Service</Link>
+                        <Link href="/community-guidelines" className="hover:text-slate-300">Community Guidelines</Link>
+                        <Link href="/privacy" className="hover:text-slate-300">Privacy Policy</Link>
+                        <Link href="/terms" className="hover:text-slate-300">Terms of Service</Link>
                     </div>
                 </div>
             </div>

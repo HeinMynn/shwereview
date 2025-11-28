@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button, Card, Input } from './ui';
-import { Star } from 'lucide-react';
+import { Star, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 const CATEGORY_METRICS = {
@@ -43,6 +43,8 @@ export default function ReviewForm({ businessId, category, onReviewSubmitted, in
     const [isAnonymous, setIsAnonymous] = useState(initialData?.is_anonymous || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
+    const [uploadedImages, setUploadedImages] = useState(initialData?.media || []);
+    const [isUploading, setIsUploading] = useState(false);
 
     const metrics = CATEGORY_METRICS[category] || [];
 
@@ -71,6 +73,7 @@ export default function ReviewForm({ businessId, category, onReviewSubmitted, in
                 textContent: text,
                 microRatings: ratings,
                 isAnonymous,
+                media: uploadedImages,
             };
 
             if (initialData) {
@@ -166,10 +169,82 @@ export default function ReviewForm({ businessId, category, onReviewSubmitted, in
                     <textarea
                         className="w-full min-h-[100px] rounded-md border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950"
                         placeholder="Tell us more about your experience..."
-                        value={text}
                         onChange={(e) => setText(e.target.value)}
                         required
                     />
+                </div>
+
+                <div>
+                    <label className="block font-medium text-gray-700 mb-2">Add Photos (Optional, Max 9)</label>
+                    <div className="flex flex-col gap-4">
+                        <Input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            disabled={isUploading}
+                            onChange={async (e) => {
+                                const files = Array.from(e.target.files || []);
+                                if (files.length === 0) return;
+
+                                if (uploadedImages.length + files.length > 9) {
+                                    setToast({ message: 'You can only upload a maximum of 9 images', type: 'error' });
+                                    return;
+                                }
+
+                                setIsUploading(true);
+
+                                try {
+                                    const newUrls = [];
+                                    for (const file of files) {
+                                        const formData = new FormData();
+                                        formData.append('file', file);
+
+                                        const res = await fetch('/api/upload/cloudinary', {
+                                            method: 'POST',
+                                            body: formData,
+                                        });
+                                        const data = await res.json();
+
+                                        if (!res.ok) throw new Error(data.error || 'Upload failed');
+                                        newUrls.push(data.url);
+                                    }
+
+                                    setUploadedImages(prev => [...prev, ...newUrls]);
+                                    setToast({ message: 'Images uploaded successfully!', type: 'success' });
+                                } catch (error) {
+                                    console.error(error);
+                                    setToast({ message: 'Failed to upload some images', type: 'error' });
+                                } finally {
+                                    setIsUploading(false);
+                                }
+
+                                // Reset input
+                                e.target.value = '';
+                            }}
+                        />
+                        {isUploading && (
+                            <div className="flex items-center gap-2 text-indigo-600 font-medium mt-2">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span className="text-sm">Uploading...</span>
+                            </div>
+                        )}
+                    </div>
+                    {uploadedImages.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                            {uploadedImages.map((url, index) => (
+                                <div key={index} className="relative group">
+                                    <img src={url} alt={`Uploaded ${index + 1}`} className="w-20 h-20 object-cover rounded border" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== index))}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -188,7 +263,7 @@ export default function ReviewForm({ businessId, category, onReviewSubmitted, in
                 <Button type="submit" disabled={isSubmitting} className="w-full">
                     {isSubmitting ? 'Submitting...' : (initialData ? 'Update Review' : 'Submit Review')}
                 </Button>
-            </form>
-        </Card>
+            </form >
+        </Card >
     );
 }

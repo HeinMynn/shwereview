@@ -13,6 +13,23 @@ export async function GET(request, { params }) {
             return NextResponse.json({ error: 'Business not found' }, { status: 404 });
         }
 
+        // Check visibility
+        if (business.status !== 'approved') {
+            // We need to check session for ownership, but this is an API route
+            // For simplicity in this context, we might just hide it or require auth
+            // Let's use getServerSession to be secure
+            const { getServerSession } = await import("next-auth/next");
+            const { authOptions } = await import("@/app/api/auth/[...nextauth]/route");
+            const session = await getServerSession(authOptions);
+
+            const isOwner = session?.user?.id === business.submitted_by?.toString() || session?.user?.id === business.owner_id?._id?.toString();
+            const isAdmin = session?.user?.role === 'Super Admin';
+
+            if (!isOwner && !isAdmin) {
+                return NextResponse.json({ error: 'Business not found' }, { status: 404 });
+            }
+        }
+
         const reviews = await Review.find({ business_id: id })
             .populate('user_id', 'name avatar badges')
             .sort({ createdAt: -1 });

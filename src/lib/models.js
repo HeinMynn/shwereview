@@ -77,6 +77,12 @@ const ReviewSchema = new mongoose.Schema({
     micro_ratings: { type: Map, of: Number, required: true },
     is_edited: { type: Boolean, default: false },
     is_hidden: { type: Boolean, default: false },
+    owner_reply: {
+        text: String,
+        createdAt: { type: Date, default: Date.now }
+    },
+    is_deleted: { type: Boolean, default: false },
+    deletedAt: { type: Date }
 }, { timestamps: true });
 
 const ReportSchema = new mongoose.Schema({

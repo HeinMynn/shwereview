@@ -49,9 +49,23 @@ export default async function BusinessProfile({ params }) {
 
     const isUnclaimed = !business.owner_id;
     const hasPendingClaim = business.claim_status === 'pending' && business.claimant_id?.toString() === session?.user?.id;
+    const isPendingApproval = business.status === 'pending';
+    const isSubmitter = business.submitted_by?.toString() === session?.user?.id;
 
     return (
         <main className="min-h-screen bg-slate-50 pb-12">
+            {isPendingApproval && (
+                <div className="bg-yellow-500 text-white text-center py-3 px-4 font-bold sticky top-16 z-30 shadow-md">
+                    <div className="flex items-center justify-center gap-2">
+                        <span className="text-xl">⚠️</span>
+                        <span>
+                            {isSubmitter
+                                ? "Your submission is pending approval. You can add reviews while you wait."
+                                : "This business is pending approval and is not visible to the public yet."}
+                        </span>
+                    </div>
+                </div>
+            )}
             {/* Hero Section */}
             <div className="relative h-[300px] md:h-[400px] bg-slate-900">
                 <img

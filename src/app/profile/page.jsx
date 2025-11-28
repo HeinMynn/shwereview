@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import dbConnect from '@/lib/mongodb';
-import { Review } from '@/lib/models';
+import { Business, Review } from '@/lib/models';
 import ProfileClient from '@/components/ProfileClient';
 
 export const dynamic = 'force-dynamic';
@@ -21,8 +21,14 @@ async function getProfileData() {
         .sort({ createdAt: -1 })
         .lean();
 
+    // Find businesses submitted by this user
+    const mySubmittedBusinesses = await Business.find({ submitted_by: userId })
+        .sort({ createdAt: -1 })
+        .lean();
+
     return {
         myReviews: JSON.parse(JSON.stringify(myReviews)),
+        mySubmittedBusinesses: JSON.parse(JSON.stringify(mySubmittedBusinesses)),
         user: session.user
     };
 }

@@ -55,7 +55,7 @@ export default async function SearchPage({ searchParams }) {
                                 name="q"
                                 defaultValue={query}
                                 placeholder="Search businesses, services, or places..."
-                                className="pl-10 w-full"
+                                className="pl-10 w-full text-slate-900"
                             />
                         </div>
                         <Button type="submit">Search</Button>

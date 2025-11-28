@@ -62,7 +62,7 @@ export default function CommunityGuidelines() {
                     <div className="bg-slate-50 p-6 rounded-lg border border-slate-200 mt-8">
                         <h3 className="font-bold text-slate-900 mb-2">Reporting Violations</h3>
                         <p className="text-gray-600">
-                            If you see a review or user that violates these guidelines, please report it to our support team or use the "Report" feature (coming soon).
+                            If you see a review or user that violates these guidelines, please use the "Report" flag icon on the review to alert our moderation team.
                         </p>
                     </div>
 

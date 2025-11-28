@@ -26,6 +26,14 @@ export async function POST(request) {
         const body = await request.json();
         const { businessId, textContent, microRatings, media, categorySnapshot, isAnonymous } = body;
 
+        // Profanity Filter
+        const BANNED_WORDS = ['scam', 'fraud', 'fake', 'hate', 'stupid', 'idiot']; // Basic list, extend as needed
+        const containsProfanity = BANNED_WORDS.some(word => textContent?.toLowerCase().includes(word));
+
+        if (containsProfanity) {
+            return NextResponse.json({ error: 'Review contains inappropriate content.' }, { status: 400 });
+        }
+
         // Basic validation
         if (!businessId || !microRatings || !categorySnapshot) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -98,7 +106,14 @@ export async function PUT(request) {
         }
 
         // Update fields
-        if (textContent) review.text_content = textContent;
+        if (textContent) {
+            const BANNED_WORDS = ['scam', 'fraud', 'fake', 'hate', 'stupid', 'idiot'];
+            const containsProfanity = BANNED_WORDS.some(word => textContent.toLowerCase().includes(word));
+            if (containsProfanity) {
+                return NextResponse.json({ error: 'Review contains inappropriate content.' }, { status: 400 });
+            }
+            review.text_content = textContent;
+        }
         if (isAnonymous !== undefined) review.is_anonymous = isAnonymous;
 
         if (microRatings) {
@@ -116,6 +131,47 @@ export async function PUT(request) {
         return NextResponse.json({ success: true, review });
     } catch (error) {
         console.error('Error updating review:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}
+
+export async function DELETE(request) {
+    try {
+        await dbConnect();
+        const session = await getServerSession(authOptions);
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const reviewId = searchParams.get('id');
+
+        if (!reviewId) {
+            return NextResponse.json({ error: 'Review ID is required' }, { status: 400 });
+        }
+
+        const review = await Review.findById(reviewId);
+        if (!review) {
+            return NextResponse.json({ error: 'Review not found' }, { status: 404 });
+        }
+
+        // Check ownership (or admin)
+        const isAdmin = session.user.role === 'Super Admin';
+        if (review.user_id.toString() !== session.user.id && !isAdmin) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
+        // Soft delete
+        review.is_deleted = true;
+        review.deletedAt = new Date();
+        await review.save();
+
+        // Update Business Aggregates
+        await updateBusinessAggregates(review.business_id);
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting review:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

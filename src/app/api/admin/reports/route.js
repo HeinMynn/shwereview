@@ -52,6 +52,11 @@ export async function PUT(request) {
             return NextResponse.json({ error: 'Report not found' }, { status: 404 });
         }
 
+        // If report is resolved, hide the review
+        if (status === 'resolved') {
+            await Review.findByIdAndUpdate(report.review_id, { is_hidden: true });
+        }
+
         return NextResponse.json({ success: true, report });
     } catch (error) {
         console.error('Error updating report:', error);
