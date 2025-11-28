@@ -8,13 +8,12 @@ import Link from 'next/link';
 
 export default function LoginPage() {
     const router = useRouter();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setIsLoading(true);
 
         const res = await signIn('credentials', {
             email,
@@ -24,6 +23,7 @@ export default function LoginPage() {
 
         if (res?.error) {
             setError('Invalid email or password');
+            setIsLoading(false);
         } else {
             router.push('/dashboard');
             router.refresh();
@@ -57,6 +57,7 @@ export default function LoginPage() {
                             required
                             placeholder="you@example.com"
                             className="h-11"
+                            disabled={isLoading}
                         />
                     </div>
                     <div>
@@ -71,10 +72,15 @@ export default function LoginPage() {
                             required
                             placeholder="••••••••"
                             className="h-11"
+                            disabled={isLoading}
                         />
                     </div>
-                    <Button type="submit" className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-lg font-medium">
-                        Sign In
+                    <Button
+                        type="submit"
+                        className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-lg font-medium"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Signing in...' : 'Sign In'}
                     </Button>
                 </form>
 

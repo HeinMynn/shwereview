@@ -7,14 +7,12 @@ import Link from 'next/link';
 
 export default function RegisterPage() {
     const router = useRouter();
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setIsLoading(true);
 
         try {
             const res = await fetch('/api/register', {
@@ -31,6 +29,7 @@ export default function RegisterPage() {
             router.push(`/verify?email=${encodeURIComponent(email)}`);
         } catch (err) {
             setError(err.message);
+            setIsLoading(false);
         }
     };
 
@@ -53,6 +52,7 @@ export default function RegisterPage() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
+                            disabled={isLoading}
                         />
                     </div>
                     <div>
@@ -62,6 +62,7 @@ export default function RegisterPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
+                            disabled={isLoading}
                         />
                     </div>
                     <div>
@@ -71,9 +72,12 @@ export default function RegisterPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
+                            disabled={isLoading}
                         />
                     </div>
-                    <Button type="submit" className="w-full">Register</Button>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? 'Creating account...' : 'Register'}
+                    </Button>
                 </form>
 
                 <div className="mt-4 text-center text-sm">

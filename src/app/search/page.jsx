@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 
 async function getBusinesses(searchParams) {
     await dbConnect();
+
     const { q, category, rating, page = 1 } = searchParams;
     const limit = 12;
     const skip = (page - 1) * limit;
@@ -16,11 +17,7 @@ async function getBusinesses(searchParams) {
     let query = { status: 'approved' };
 
     if (q) {
-        query.$or = [
-            { name: { $regex: q, $options: 'i' } },
-            { description: { $regex: q, $options: 'i' } },
-            { address: { $regex: q, $options: 'i' } },
-        ];
+        query.$text = { $search: q };
     }
 
     if (category && category !== 'all') {
@@ -34,12 +31,19 @@ async function getBusinesses(searchParams) {
     const totalBusinesses = await Business.countDocuments(query);
     const totalPages = Math.ceil(totalBusinesses / limit);
 
-    const businesses = await Business.find(query)
+    let businessQuery = Business.find(query)
         .select('name description address images category aggregate_rating status')
-        .sort({ aggregate_rating: -1 })
         .skip(skip)
-        .limit(limit)
-        .lean();
+        .limit(limit);
+
+    // If searching by text, sort by relevance score
+    if (q) {
+        businessQuery = businessQuery.sort({ score: { $meta: "textScore" } });
+    } else {
+        businessQuery = businessQuery.sort({ aggregate_rating: -1 });
+    }
+
+    const businesses = await businessQuery.lean();
 
     return {
         businesses: JSON.parse(JSON.stringify(businesses)),

@@ -125,6 +125,7 @@ BusinessSchema.index({ status: 1 });
 BusinessSchema.index({ aggregate_rating: -1 }); // For sorting by rating
 BusinessSchema.index({ submitted_by: 1 }); // For dashboard queries
 BusinessSchema.index({ createdAt: -1 }); // For sorting by date
+BusinessSchema.index({ name: 'text', description: 'text', address: 'text' }); // Text search index
 ReviewSchema.index({ business_id: 1 });
 ReviewSchema.index({ user_id: 1 });
 ReviewSchema.index({ createdAt: -1 }); // For sorting by date
