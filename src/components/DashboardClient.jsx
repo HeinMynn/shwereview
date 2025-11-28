@@ -1,187 +1,231 @@
 'use client';
 
 import { useState } from 'react';
-import { Card } from '@/components/ui';
-import { Star, TrendingUp, Users, Building2 } from 'lucide-react';
+import { Card, Button } from '@/components/ui';
+import { Star, TrendingUp, Users, Building2, LayoutGrid, List, MessageSquare, Plus } from 'lucide-react';
 import DashboardChart from '@/components/DashboardChart';
 import DashboardReviews from '@/components/DashboardReviews';
+import Link from 'next/link';
 
 export default function DashboardClient({ data }) {
     const { businesses = [], allReviews, reviewsByBusiness, submissions, myReviews, user } = data;
+    const [activeTab, setActiveTab] = useState('overview');
 
-    const [selectedBusinessId, setSelectedBusinessId] = useState(
-        businesses?.length > 0 ? businesses[0]._id.toString() : null
+    // Derived state for Overview
+    const totalReviewsGiven = myReviews.length;
+    const totalBusinessesOwned = businesses.length;
+    const totalReviewsReceived = allReviews?.length || 0;
+
+    // Calculate average rating across all owned businesses
+    const totalRating = businesses.reduce((acc, b) => acc + (b.aggregate_rating || 0), 0);
+    const avgRating = totalBusinessesOwned > 0 ? (totalRating / totalBusinessesOwned).toFixed(1) : 0;
+
+    const Tabs = () => (
+        <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg mb-8 inline-flex">
+            <button
+                onClick={() => setActiveTab('overview')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'overview' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+            >
+                <LayoutGrid className="w-4 h-4 inline-block mr-2" />
+                Overview
+            </button>
+            <button
+                onClick={() => setActiveTab('businesses')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'businesses' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+            >
+                <Building2 className="w-4 h-4 inline-block mr-2" />
+                My Businesses
+            </button>
+            <button
+                onClick={() => setActiveTab('reviews')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'reviews' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+            >
+                <MessageSquare className="w-4 h-4 inline-block mr-2" />
+                My Reviews
+            </button>
+        </div>
     );
 
-    if (!businesses || businesses.length === 0) {
-        return (
-            <main className="min-h-screen bg-slate-50 p-8">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-12">
-                        <h1 className="text-2xl font-bold mb-2">Welcome, {user.name}</h1>
-                        <p className="text-gray-600">You don't have any businesses registered yet.</p>
+    return (
+        <main className="min-h-screen bg-slate-50 p-4 md:p-8">
+            <div className="max-w-7xl mx-auto">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+                        <p className="text-slate-500">Welcome back, {user.name}</p>
                     </div>
+                    <Link href="/business/new">
+                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                            <Plus className="w-4 h-4 mr-2" /> Add New Business
+                        </Button>
+                    </Link>
+                </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {submissions.length > 0 && (
-                            <Card className="p-6">
-                                <h2 className="text-xl font-bold mb-4">My Submissions</h2>
-                                <div className="space-y-4">
-                                    {submissions.map(sub => (
-                                        <div key={sub._id} className="p-4 border rounded-lg flex justify-between items-center bg-white">
-                                            <div>
-                                                <div className="font-bold">{sub.name}</div>
-                                                <div className="text-sm text-gray-500">{sub.address}</div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold capitalize ${sub.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                                    sub.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                                        'bg-yellow-100 text-yellow-800'
-                                                    }`}>
-                                                    {sub.status}
-                                                </span>
-                                            </div>
+                <Tabs />
+
+                {activeTab === 'overview' && (
+                    <div className="space-y-8">
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <Card className="p-6 flex items-center gap-4">
+                                <div className="p-3 bg-indigo-100 text-indigo-600 rounded-full">
+                                    <Building2 className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <div className="text-sm text-gray-600">Businesses Owned</div>
+                                    <div className="text-2xl font-bold">{totalBusinessesOwned}</div>
+                                </div>
+                            </Card>
+                            <Card className="p-6 flex items-center gap-4">
+                                <div className="p-3 bg-green-100 text-green-600 rounded-full">
+                                    <MessageSquare className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <div className="text-sm text-gray-600">Reviews Given</div>
+                                    <div className="text-2xl font-bold">{totalReviewsGiven}</div>
+                                </div>
+                            </Card>
+                            {totalBusinessesOwned > 0 && (
+                                <>
+                                    <Card className="p-6 flex items-center gap-4">
+                                        <div className="p-3 bg-yellow-100 text-yellow-600 rounded-full">
+                                            <Star className="w-6 h-6" />
                                         </div>
-                                    ))}
+                                        <div>
+                                            <div className="text-sm text-gray-600">Avg Rating</div>
+                                            <div className="text-2xl font-bold">{avgRating}</div>
+                                        </div>
+                                    </Card>
+                                    <Card className="p-6 flex items-center gap-4">
+                                        <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
+                                            <Users className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <div className="text-sm text-gray-600">Reviews Received</div>
+                                            <div className="text-2xl font-bold">{totalReviewsReceived}</div>
+                                        </div>
+                                    </Card>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Recent Activity / Charts could go here */}
+                        {totalBusinessesOwned > 0 ? (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <Card className="p-6">
+                                    <h3 className="text-lg font-bold mb-4">Performance Overview</h3>
+                                    <div className="h-64 flex items-center justify-center bg-slate-50 rounded-lg border border-dashed border-slate-300">
+                                        <p className="text-slate-400">Select a business in "My Businesses" for detailed analytics</p>
+                                    </div>
+                                </Card>
+                                <Card className="p-6">
+                                    <h3 className="text-lg font-bold mb-4">Recent Reviews Received</h3>
+                                    {allReviews && allReviews.length > 0 ? (
+                                        <DashboardReviews reviews={allReviews.slice(0, 3)} />
+                                    ) : (
+                                        <p className="text-slate-500">No reviews received yet.</p>
+                                    )}
+                                </Card>
+                            </div>
+                        ) : (
+                            <Card className="p-8 text-center">
+                                <div className="max-w-md mx-auto">
+                                    <Building2 className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+                                    <h3 className="text-lg font-bold text-slate-900 mb-2">Start Your Business Journey</h3>
+                                    <p className="text-slate-500 mb-6">List your business on ShweReview to reach more customers and collect valuable feedback.</p>
+                                    <Link href="/business/new">
+                                        <Button>List Your Business</Button>
+                                    </Link>
                                 </div>
                             </Card>
                         )}
-
-                        <Card className="p-6">
-                            <h2 className="text-xl font-bold mb-4">My Reviews</h2>
-                            <DashboardReviews reviews={myReviews} />
-                        </Card>
                     </div>
-                </div>
-            </main>
-        );
-    }
+                )}
 
-    const selectedBusiness = businesses.find(b => b._id.toString() === selectedBusinessId) || businesses[0];
-    const businessReviews = reviewsByBusiness[selectedBusinessId] || [];
-    const metricKey = Object.keys(selectedBusiness.micro_metrics_aggregates || {})[0] || 'overall';
-
-    const chartData = businessReviews.map(r => ({
-        date: new Date(r.createdAt).toLocaleDateString(),
-        value: metricKey === 'overall' ? r.overall_rating : (r.micro_ratings?.[metricKey] || 0)
-    }));
-
-    return (
-        <main className="min-h-screen bg-slate-50 p-8">
-            <div className="max-w-7xl mx-auto">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-slate-900">Owner Dashboard</h1>
-
-                    {businesses.length > 1 ? (
-                        <select
-                            value={selectedBusinessId}
-                            onChange={(e) => setSelectedBusinessId(e.target.value)}
-                            className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                        >
-                            {businesses.map(b => (
-                                <option key={b._id} value={b._id.toString()}>
-                                    {b.name}
-                                </option>
-                            ))}
-                        </select>
-                    ) : (
-                        <div className="text-sm text-gray-600">
-                            Managing: <span className="font-bold text-gray-900">{selectedBusiness.name}</span>
+                {activeTab === 'businesses' && (
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-slate-900">My Businesses & Submissions</h2>
                         </div>
-                    )}
-                </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <Card className="p-6 flex items-center gap-4">
-                        <div className="p-3 bg-indigo-100 text-indigo-600 rounded-full">
-                            <Building2 className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <div className="text-sm text-gray-600">Total Businesses</div>
-                            <div className="text-2xl font-bold">{businesses.length}</div>
-                        </div>
-                    </Card>
+                        {businesses.length === 0 && submissions.length === 0 ? (
+                            <Card className="p-12 text-center">
+                                <p className="text-slate-500">You haven't listed any businesses yet.</p>
+                            </Card>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-4">
+                                {/* Active Businesses */}
+                                {businesses.map(business => (
+                                    <Card key={business._id} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-shadow">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-16 h-16 bg-slate-200 rounded-lg overflow-hidden relative flex-shrink-0">
+                                                {business.images?.[0] ? (
+                                                    <img src={business.images[0]} alt={business.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                                        <Building2 className="w-8 h-8" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-lg text-slate-900">{business.name}</h3>
+                                                <p className="text-sm text-slate-500 mb-1">{business.address}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded">Active</span>
+                                                    <span className="flex items-center text-xs font-medium text-yellow-600">
+                                                        <Star className="w-3 h-3 mr-1 fill-current" />
+                                                        {business.aggregate_rating?.toFixed(1) || 'New'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2 w-full md:w-auto">
+                                            <Link href={`/business/${business._id}`} className="flex-1 md:flex-none">
+                                                <Button variant="outline" className="w-full">View Page</Button>
+                                            </Link>
+                                            <Button className="flex-1 md:flex-none">Manage</Button>
+                                        </div>
+                                    </Card>
+                                ))}
 
-                    <Card className="p-6 flex items-center gap-4">
-                        <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
-                            <Star className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <div className="text-sm text-gray-600">Current Rating</div>
-                            <div className="text-2xl font-bold">{selectedBusiness.aggregate_rating?.toFixed(1) || 0}</div>
-                        </div>
-                    </Card>
-
-                    <Card className="p-6 flex items-center gap-4">
-                        <div className="p-3 bg-green-100 text-green-600 rounded-full">
-                            <Users className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <div className="text-sm text-gray-600">Reviews</div>
-                            <div className="text-2xl font-bold">{businessReviews.length}</div>
-                        </div>
-                    </Card>
-
-                    <Card className="p-6 flex items-center gap-4">
-                        <div className="p-3 bg-purple-100 text-purple-600 rounded-full">
-                            <TrendingUp className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <div className="text-sm text-gray-600">Top Metric</div>
-                            <div className="text-lg font-bold capitalize">{metricKey.replace('_', ' ')}</div>
-                        </div>
-                    </Card>
-                </div>
-
-                {/* Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <DashboardChart
-                        title={`Trend: ${metricKey.replace('_', ' ')}`}
-                        data={chartData}
-                    />
-
-                    <Card className="p-6">
-                        <h3 className="text-lg font-bold mb-4">Recent Feedback</h3>
-                        <div className="space-y-4">
-                            <p className="text-gray-500 italic">Check the business profile for detailed comments.</p>
-                        </div>
-                    </Card>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {submissions.length > 0 && (
-                        <Card className="p-6">
-                            <h2 className="text-xl font-bold mb-4">My Submissions</h2>
-                            <div className="space-y-4">
+                                {/* Pending Submissions */}
                                 {submissions.map(sub => (
-                                    <div key={sub._id} className="p-4 border rounded-lg flex justify-between items-center bg-white">
+                                    <Card key={sub._id} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 opacity-75">
                                         <div>
-                                            <div className="font-bold text-gray-900">{sub.name}</div>
-                                            <div className="text-sm text-gray-600">{sub.address}</div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className={`px-2 py-1 rounded text-xs font-bold capitalize ${sub.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                                sub.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                                    'bg-yellow-100 text-yellow-800'
+                                            <h3 className="font-bold text-lg text-slate-900">{sub.name}</h3>
+                                            <p className="text-sm text-slate-500 mb-1">{sub.address}</p>
+                                            <span className={`px-2 py-1 rounded text-xs font-bold capitalize ${sub.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                    sub.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-gray-100'
                                                 }`}>
-                                                {sub.status}
+                                                {sub.status} Submission
                                             </span>
-                                            {sub.owner_id === user.id && (
-                                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">Owner</span>
-                                            )}
                                         </div>
-                                    </div>
+                                        <Button disabled variant="outline">Processing</Button>
+                                    </Card>
                                 ))}
                             </div>
-                        </Card>
-                    )}
+                        )}
+                    </div>
+                )}
 
-                    <Card className="p-6">
-                        <h2 className="text-xl font-bold mb-4">My Reviews</h2>
-                        <DashboardReviews reviews={myReviews} />
-                    </Card>
-                </div>
+                {activeTab === 'reviews' && (
+                    <div className="space-y-6">
+                        <h2 className="text-xl font-bold text-slate-900">My Reviews</h2>
+                        {myReviews.length > 0 ? (
+                            <DashboardReviews reviews={myReviews} />
+                        ) : (
+                            <Card className="p-12 text-center">
+                                <p className="text-slate-500">You haven't written any reviews yet.</p>
+                                <Link href="/search" className="mt-4 inline-block">
+                                    <Button>Browse Businesses</Button>
+                                </Link>
+                            </Card>
+                        )}
+                    </div>
+                )}
             </div>
         </main>
     );

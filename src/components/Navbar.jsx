@@ -1,13 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from './ui';
-import { User, LogOut, LayoutDashboard, Shield, AlertTriangle } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, Shield, AlertTriangle, Menu, X, Search } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 
 export default function Navbar() {
     const { data: session } = useSession();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
         <>
@@ -35,10 +37,15 @@ export default function Navbar() {
                             </Link>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        {/* Desktop Menu */}
+                        <div className="hidden md:flex items-center gap-4">
+                            <Link href="/search" className="text-slate-500 hover:text-indigo-600 p-2">
+                                <Search className="w-5 h-5" />
+                            </Link>
+
                             {session ? (
                                 <>
-                                    <div className="hidden md:flex items-center gap-4 mr-4 text-sm font-medium text-slate-600">
+                                    <div className="flex items-center gap-4 mr-4 text-sm font-medium text-slate-600">
                                         {session.user.role === 'Super Admin' && (
                                             <Link href="/admin" className="flex items-center gap-1 hover:text-indigo-600">
                                                 <Shield className="w-4 h-4" /> Admin
@@ -53,7 +60,7 @@ export default function Navbar() {
 
                                     <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                                         <NotificationDropdown />
-                                        <div className="hidden md:block text-right">
+                                        <div className="text-right">
                                             <div className="text-sm font-bold text-slate-900">{session.user.name}</div>
                                             <div className="text-xs text-slate-500">{session.user.role}</div>
                                             {session.user.account_status === 'warning' && (
@@ -69,7 +76,7 @@ export default function Navbar() {
                                             className="flex items-center gap-2"
                                         >
                                             <LogOut className="w-4 h-4" />
-                                            <span className="hidden md:inline">Logout</span>
+                                            <span className="hidden lg:inline">Logout</span>
                                         </Button>
                                     </div>
                                 </>
@@ -84,8 +91,65 @@ export default function Navbar() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Mobile Menu Button */}
+                        <div className="flex items-center md:hidden gap-4">
+                            <Link href="/search" className="text-slate-500 hover:text-indigo-600">
+                                <Search className="w-5 h-5" />
+                            </Link>
+                            <button
+                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                                className="text-slate-500 hover:text-slate-900 focus:outline-none"
+                            >
+                                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                            </button>
+                        </div>
                     </div>
                 </div>
+
+                {/* Mobile Menu Dropdown */}
+                {isMobileMenuOpen && (
+                    <div className="md:hidden bg-white border-t border-slate-200 px-4 pt-2 pb-4 shadow-lg">
+                        <div className="flex flex-col gap-4">
+                            {session ? (
+                                <>
+                                    <div className="py-2 border-b border-slate-100">
+                                        <div className="font-bold text-slate-900">{session.user.name}</div>
+                                        <div className="text-sm text-slate-500">{session.user.role}</div>
+                                    </div>
+
+                                    {session.user.role === 'Super Admin' && (
+                                        <Link href="/admin" className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 py-2">
+                                            <Shield className="w-4 h-4" /> Admin Panel
+                                        </Link>
+                                    )}
+                                    {(session.user.role === 'Owner' || session.user.role === 'Super Admin') && (
+                                        <Link href="/dashboard" className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 py-2">
+                                            <LayoutDashboard className="w-4 h-4" /> Dashboard
+                                        </Link>
+                                    )}
+
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => signOut({ callbackUrl: '/' })}
+                                        className="w-full justify-center mt-2"
+                                    >
+                                        <LogOut className="w-4 h-4 mr-2" /> Logout
+                                    </Button>
+                                </>
+                            ) : (
+                                <div className="flex flex-col gap-2 mt-2">
+                                    <Link href="/login" className="w-full">
+                                        <Button variant="ghost" className="w-full justify-center">Login</Button>
+                                    </Link>
+                                    <Link href="/register" className="w-full">
+                                        <Button className="w-full justify-center">Register</Button>
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </nav>
         </>
     );

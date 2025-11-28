@@ -22,25 +22,46 @@ export default async function Home() {
     return (
         <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
             {/* Hero Section */}
-            <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-20">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                        Discover & Review Businesses
+            <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-20 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://placehold.co/1920x600/indigo/white?text=Pattern')] opacity-10 mix-blend-overlay"></div>
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+                    <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
+                        Discover & Review <br />
+                        <span className="text-indigo-200">Local Businesses</span>
                     </h1>
-                    <p className="text-xl md:text-2xl mb-8 text-indigo-100">
-                        Find the best local businesses and share your experiences
+                    <p className="text-xl md:text-2xl mb-8 text-indigo-100 font-light">
+                        Find the best places in town, curated by the community.
                     </p>
-                    <div className="flex gap-4 justify-center">
-                        <Link href="/business/new">
-                            <Button size="lg" className="bg-white text-indigo-600 hover:bg-gray-100">
-                                Add Business
+
+                    {/* Search Bar */}
+                    <div className="max-w-2xl mx-auto mb-8">
+                        <form action="/search" className="relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input
+                                name="q"
+                                type="text"
+                                placeholder="What are you looking for? (e.g., Sushi, Spa, Yangon)"
+                                className="w-full pl-12 pr-4 py-4 rounded-full text-gray-900 shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-400/50 text-lg"
+                            />
+                            <Button
+                                type="submit"
+                                className="absolute right-2 top-2 bottom-2 rounded-full px-6 bg-indigo-600 hover:bg-indigo-700"
+                            >
+                                Search
                             </Button>
-                        </Link>
-                        <Link href="#browse">
-                            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                                Browse Businesses
-                            </Button>
-                        </Link>
+                        </form>
+                    </div>
+
+                    {/* Quick Categories */}
+                    <div className="flex flex-wrap justify-center gap-3 text-sm font-medium">
+                        <span className="text-indigo-200 py-2">Popular:</span>
+                        {['Restaurant', 'Shop', 'Education', 'Logistics'].map((cat) => (
+                            <Link key={cat} href={`/search?category=${cat.toLowerCase()}`}>
+                                <span className="inline-block px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 transition-colors cursor-pointer">
+                                    {cat}
+                                </span>
+                            </Link>
+                        ))}
                     </div>
                 </div>
             </section>
