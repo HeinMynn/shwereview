@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Card } from './ui';
 
-export default function DashboardChart({ data, title }) {
+export default function DashboardChart({ data, title, series }) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -22,6 +22,9 @@ export default function DashboardChart({ data, title }) {
         );
     }
 
+    // Default to single value series if not provided
+    const chartSeries = series || [{ key: 'value', color: '#8884d8', name: 'Average Rating' }];
+
     return (
         <Card className="p-6">
             <h3 className="text-lg font-bold mb-4">{title}</h3>
@@ -33,7 +36,17 @@ export default function DashboardChart({ data, title }) {
                         <YAxis domain={[0, 5]} />
                         <Tooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="value" stroke="#8884d8" activeDot={{ r: 8 }} />
+                        {chartSeries.map((s) => (
+                            <Line
+                                key={s.key}
+                                type="monotone"
+                                dataKey={s.key}
+                                name={s.name}
+                                stroke={s.color}
+                                activeDot={{ r: 8 }}
+                                connectNulls
+                            />
+                        ))}
                     </LineChart>
                 </ResponsiveContainer>
             </div>

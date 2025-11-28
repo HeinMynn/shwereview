@@ -60,12 +60,19 @@ export default function Navbar() {
 
                                     <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                                         <NotificationDropdown />
-                                        <div className="text-right">
-                                            <div className="text-sm font-bold text-slate-900">{session.user.name}</div>
-                                            <div className="text-xs text-slate-500">{session.user.role}</div>
+                                        <div className="text-right flex items-center">
+                                            <Link href="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                                                <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-sm border border-indigo-200">
+                                                    {session.user.avatar ? (
+                                                        <img src={session.user.avatar} alt={session.user.name} className="w-full h-full rounded-full object-cover" />
+                                                    ) : (
+                                                        session.user.name.charAt(0).toUpperCase()
+                                                    )}
+                                                </div>
+                                            </Link>
                                             {session.user.account_status === 'warning' && (
-                                                <div className="text-xs text-yellow-600 font-bold flex items-center justify-end gap-1">
-                                                    <AlertTriangle className="w-3 h-3" /> Warning ({session.user.warning_count})
+                                                <div className="ml-2 text-xs text-yellow-600 font-bold flex items-center gap-1" title={`Warning (${session.user.warning_count})`}>
+                                                    <AlertTriangle className="w-4 h-4" />
                                                 </div>
                                             )}
                                         </div>
@@ -114,17 +121,28 @@ export default function Navbar() {
                             {session ? (
                                 <>
                                     <div className="py-2 border-b border-slate-100">
-                                        <div className="font-bold text-slate-900">{session.user.name}</div>
-                                        <div className="text-sm text-slate-500">{session.user.role}</div>
+                                        <Link href="/profile" className="flex items-center gap-3" onClick={() => setIsMobileMenuOpen(false)}>
+                                            <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-lg border border-indigo-200">
+                                                {session.user.avatar ? (
+                                                    <img src={session.user.avatar} alt={session.user.name} className="w-full h-full rounded-full object-cover" />
+                                                ) : (
+                                                    session.user.name.charAt(0).toUpperCase()
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-slate-900">{session.user.name}</div>
+                                                <div className="text-sm text-slate-500">{session.user.role}</div>
+                                            </div>
+                                        </Link>
                                     </div>
 
                                     {session.user.role === 'Super Admin' && (
-                                        <Link href="/admin" className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 py-2">
+                                        <Link href="/admin" className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 py-2" onClick={() => setIsMobileMenuOpen(false)}>
                                             <Shield className="w-4 h-4" /> Admin Panel
                                         </Link>
                                     )}
                                     {(session.user.role === 'Owner' || session.user.role === 'Super Admin') && (
-                                        <Link href="/dashboard" className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 py-2">
+                                        <Link href="/dashboard" className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 py-2" onClick={() => setIsMobileMenuOpen(false)}>
                                             <LayoutDashboard className="w-4 h-4" /> Dashboard
                                         </Link>
                                     )}
@@ -139,10 +157,10 @@ export default function Navbar() {
                                 </>
                             ) : (
                                 <div className="flex flex-col gap-2 mt-2">
-                                    <Link href="/login" className="w-full">
+                                    <Link href="/login" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
                                         <Button variant="ghost" className="w-full justify-center">Login</Button>
                                     </Link>
-                                    <Link href="/register" className="w-full">
+                                    <Link href="/register" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
                                         <Button className="w-full justify-center">Register</Button>
                                     </Link>
                                 </div>

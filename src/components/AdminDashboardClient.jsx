@@ -20,9 +20,9 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
     const TabButton = ({ id, label, icon: Icon }) => (
         <button
             onClick={() => setActiveTab(id)}
-            className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === id
-                    ? 'bg-white text-indigo-600 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${activeTab === id
+                ? 'bg-white text-indigo-600 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
         >
             <Icon className="w-4 h-4 mr-2" />
@@ -40,7 +40,7 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                     </div>
                 </div>
 
-                <div className="flex space-x-1 bg-slate-200 p-1 rounded-lg mb-8 inline-flex">
+                <div className="flex space-x-1 bg-slate-200 p-1 rounded-lg mb-8 overflow-x-auto max-w-full">
                     <TabButton id="overview" label="Overview" icon={LayoutGrid} />
                     <TabButton id="businesses" label="Businesses" icon={Building2} />
                     <TabButton id="users" label="Users" icon={Users} />
@@ -54,7 +54,7 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                                 <Users className="w-6 h-6" />
                             </div>
                             <div>
-                                <div className="text-sm text-gray-600">Total Users</div>
+                                <div className="text-sm font-medium text-slate-700">Total Users</div>
                                 <div className="text-2xl font-bold">{totalUsers}</div>
                             </div>
                         </Card>
@@ -63,7 +63,7 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                                 <Building2 className="w-6 h-6" />
                             </div>
                             <div>
-                                <div className="text-sm text-gray-600">Total Businesses</div>
+                                <div className="text-sm font-medium text-slate-700">Total Businesses</div>
                                 <div className="text-2xl font-bold">{totalBusinesses}</div>
                             </div>
                         </Card>
@@ -72,7 +72,7 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                                 <AlertTriangle className="w-6 h-6" />
                             </div>
                             <div>
-                                <div className="text-sm text-gray-600">Pending Approvals</div>
+                                <div className="text-sm font-medium text-slate-700">Pending Approvals</div>
                                 <div className="text-2xl font-bold">{pendingBusinesses}</div>
                             </div>
                         </Card>
@@ -81,7 +81,7 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                                 <Shield className="w-6 h-6" />
                             </div>
                             <div>
-                                <div className="text-sm text-gray-600">Suspended Users</div>
+                                <div className="text-sm font-medium text-slate-700">Suspended Users</div>
                                 <div className="text-2xl font-bold">{suspendedUsers}</div>
                             </div>
                         </Card>
@@ -97,10 +97,10 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">User</th>
-                                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Role</th>
-                                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">User</th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Role</th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
@@ -113,7 +113,7 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                                                 </div>
                                                 <div>
                                                     <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                                                    <div className="text-sm text-gray-500">{user.email}</div>
+                                                    <div className="text-sm text-gray-600">{user.email}</div>
                                                 </div>
                                             </div>
                                         </td>
@@ -124,8 +124,8 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.account_status === 'active' ? 'bg-green-100 text-green-800' :
-                                                    user.account_status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-red-100 text-red-800'
+                                                user.account_status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                                                    'bg-red-100 text-red-800'
                                                 }`}>
                                                 {user.account_status || 'active'}
                                             </span>

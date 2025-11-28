@@ -72,5 +72,11 @@ export default async function Dashboard() {
         redirect('/login');
     }
 
+    // If user has no businesses and is not an admin, redirect to profile
+    // (getOwnerData returns noBusiness: true in this case)
+    if (data.noBusiness && data.user.role !== 'Super Admin') {
+        redirect('/profile');
+    }
+
     return <DashboardClient data={data} />;
 }
