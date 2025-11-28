@@ -126,9 +126,16 @@ BusinessSchema.index({ aggregate_rating: -1 }); // For sorting by rating
 BusinessSchema.index({ submitted_by: 1 }); // For dashboard queries
 BusinessSchema.index({ createdAt: -1 }); // For sorting by date
 BusinessSchema.index({ name: 'text', description: 'text', address: 'text' }); // Text search index
+
+// Compound Indexes for Performance
+BusinessSchema.index({ status: 1, aggregate_rating: -1 }); // Home page "Top Rated" query
+BusinessSchema.index({ category: 1, aggregate_rating: -1 }); // Search page filtering
+BusinessSchema.index({ status: 1, category: 1 }); // Search page category filter
+
 ReviewSchema.index({ business_id: 1 });
 ReviewSchema.index({ user_id: 1 });
 ReviewSchema.index({ createdAt: -1 }); // For sorting by date
+ReviewSchema.index({ business_id: 1, createdAt: -1 }); // Business page reviews sort
 ReportSchema.index({ review_id: 1 });
 NotificationSchema.index({ user_id: 1 });
 

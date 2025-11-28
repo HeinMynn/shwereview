@@ -23,7 +23,15 @@ export default async function Home() {
         <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
             {/* Hero Section */}
             <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-20 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://placehold.co/1920x600/indigo/white?text=Pattern')] opacity-10 mix-blend-overlay"></div>
+                <div className="absolute inset-0 opacity-10 mix-blend-overlay">
+                    <Image
+                        src="https://placehold.co/1920x600/indigo/white?text=Pattern"
+                        alt="Background Pattern"
+                        fill
+                        priority
+                        className="object-cover"
+                    />
+                </div>
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
                     <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
                         Discover & Review <br />
