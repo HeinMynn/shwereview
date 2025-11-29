@@ -93,7 +93,7 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                 )}
 
                 {activeTab === 'users' && (
-                    <div className="bg-white rounded-lg shadow overflow-hidden border border-slate-200">
+                    <div className="bg-white rounded-lg shadow overflow-x-auto border border-slate-200">
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
