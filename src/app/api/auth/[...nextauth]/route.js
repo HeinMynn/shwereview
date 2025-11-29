@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import dbConnect from "@/lib/mongodb";
 import { User } from "@/lib/models";
@@ -6,6 +7,10 @@ import bcrypt from "bcryptjs";
 
 export const authOptions = {
     providers: [
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        }),
         CredentialsProvider({
             name: "Credentials",
             credentials: {
@@ -25,13 +30,12 @@ export const authOptions = {
                     throw new Error('Your account has been banned.');
                 }
 
+                // For credentials login, we check email verification
                 if (user.email_verified === false) {
                     throw new Error('Please verify your email address.');
                 }
 
                 // Check if password matches
-                // In a real app, use bcrypt.compare
-                // For now, since we might have plain text from old seed, we'll check both
                 const isValid = await bcrypt.compare(credentials.password, user.password_hash);
 
                 if (!isValid) {
@@ -51,12 +55,55 @@ export const authOptions = {
         }),
     ],
     callbacks: {
+        async signIn({ user, account, profile }) {
+            if (account.provider === "google") {
+                await dbConnect();
+                try {
+                    const existingUser = await User.findOne({ email: user.email });
+
+                    if (!existingUser) {
+                        // Create new user
+                        await User.create({
+                            name: user.name,
+                            email: user.email,
+                            avatar: user.image,
+                            email_verified: true, // Google emails are verified
+                            role: 'User',
+                            account_status: 'active',
+                        });
+                    } else {
+                        // Update existing user avatar if not set or changed
+                        if (!existingUser.avatar || existingUser.avatar !== user.image) {
+                            existingUser.avatar = user.image;
+                            await existingUser.save();
+                        }
+
+                        // Check if banned
+                        if (existingUser.account_status === 'banned') {
+                            return false; // Deny sign in
+                        }
+                    }
+                    return true;
+                } catch (error) {
+                    console.error("Error creating/updating user from Google login:", error);
+                    return false;
+                }
+            }
+            return true;
+        },
         async jwt({ token, user, trigger, session }) {
             if (user) {
-                token.role = user.role;
-                token.id = user.id;
-                token.account_status = user.account_status;
-                token.warning_count = user.warning_count;
+                // If it's a new sign in, we might need to fetch the user from DB to get role/status
+                // because the 'user' object from Google provider might not have our DB fields yet
+                await dbConnect();
+                const dbUser = await User.findOne({ email: user.email });
+
+                if (dbUser) {
+                    token.role = dbUser.role;
+                    token.id = dbUser._id.toString();
+                    token.account_status = dbUser.account_status;
+                    token.warning_count = dbUser.warning_count;
+                }
             }
 
             // Update token if session is updated (e.g. via update())
