@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { Button, Card } from '@/components/ui';
 import { Search, Star, MapPin, TrendingUp, Users, FileText, Globe, CheckCircle, ArrowRight } from 'lucide-react';
 import dbConnect from '@/lib/mongodb';
-import { Business } from '@/lib/models';
+import { Business, HomepageConfig } from '@/lib/models';
 
 export const revalidate = 60;
 
@@ -16,8 +16,43 @@ async function getBusinesses() {
     return JSON.parse(JSON.stringify(businesses));
 }
 
+async function getCategories() {
+    await dbConnect();
+    const categories = await Business.distinct('category', { status: 'approved' });
+    return categories.map(cat => cat.charAt(0).toUpperCase() + cat.slice(1));
+}
+
+async function getHomepageConfig() {
+    await dbConnect();
+    const config = await HomepageConfig.findOne().sort({ createdAt: -1 }).lean();
+    if (!config) {
+        return {
+            hero: {
+                title: 'Discover & Review <br /><span className="text-indigo-400">Local Businesses</span> in Myanmar',
+                subtitle: 'Find trusted businesses, read honest reviews from real customers, and share your own experiences.',
+                backgroundImage: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?q=80&w=2000&auto=format&fit=crop',
+                searchPlaceholder: 'Search for restaurants, hotels, services...'
+            },
+            stats: [
+                { label: 'Businesses Listed', value: '2,500+', icon: 'MapPin' },
+                { label: 'Active Users', value: '50k+', icon: 'Users' },
+                { label: 'Reviews Written', value: '125k+', icon: 'FileText' },
+                { label: 'Cities Covered', value: '75+', icon: 'Globe' }
+            ],
+            cta: {
+                title: 'Grow Your Business with ShweReview',
+                subtitle: 'Claim your business profile, respond to reviews, and reach thousands of potential customers in Myanmar.',
+                buttonText: 'List Your Business'
+            }
+        };
+    }
+    return JSON.parse(JSON.stringify(config));
+}
+
 export default async function Home() {
     const businesses = await getBusinesses();
+    const categories = await getCategories();
+    const config = await getHomepageConfig();
 
     return (
         <main className="min-h-screen bg-white">
@@ -26,8 +61,8 @@ export default async function Home() {
                 {/* Background Image with Overlay */}
                 <div className="absolute inset-0 z-0">
                     <Image
-                        src="https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?q=80&w=2000&auto=format&fit=crop"
-                        alt="Yangon Street Scene"
+                        src={config.hero.backgroundImage}
+                        alt="Hero Background"
                         fill
                         priority
                         className="object-cover"
@@ -36,12 +71,10 @@ export default async function Home() {
                 </div>
 
                 <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-                    <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
-                        Discover & Review <br />
-                        <span className="text-indigo-400">Local Businesses</span> in Myanmar
+                    <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight" dangerouslySetInnerHTML={{ __html: config.hero.title }}>
                     </h1>
                     <p className="text-lg md:text-xl mb-10 text-slate-200 max-w-2xl mx-auto font-light">
-                        Find trusted businesses, read honest reviews from real customers, and share your own experiences.
+                        {config.hero.subtitle}
                     </p>
 
                     {/* Search Bar */}
@@ -53,7 +86,7 @@ export default async function Home() {
                                 <input
                                     name="q"
                                     type="text"
-                                    placeholder="Search for restaurants, hotels, services..."
+                                    placeholder={config.hero.searchPlaceholder}
                                     className="w-full px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:outline-none text-lg bg-transparent"
                                 />
                                 <Button
@@ -68,13 +101,24 @@ export default async function Home() {
 
                     {/* Quick Categories */}
                     <div className="flex flex-wrap justify-center gap-3">
-                        {['Restaurants', 'Hotels', 'Shopping', 'Services', 'Health', 'Entertainment'].map((cat) => (
-                            <Link key={cat} href={`/search?category=${cat.toLowerCase()}`}>
-                                <span className="inline-block px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 transition-all cursor-pointer text-sm font-medium hover:scale-105">
-                                    {cat}
-                                </span>
-                            </Link>
-                        ))}
+                        {categories.length > 0 ? (
+                            categories.map((cat) => (
+                                <Link key={cat} href={`/search?category=${cat.toLowerCase()}`}>
+                                    <span className="inline-block px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 transition-all cursor-pointer text-sm font-medium hover:scale-105">
+                                        {cat}
+                                    </span>
+                                </Link>
+                            ))
+                        ) : (
+                            // Fallback if no categories found
+                            ['Restaurants', 'Hotels', 'Shopping', 'Services'].map((cat) => (
+                                <Link key={cat} href={`/search?category=${cat.toLowerCase()}`}>
+                                    <span className="inline-block px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 transition-all cursor-pointer text-sm font-medium hover:scale-105">
+                                        {cat}
+                                    </span>
+                                </Link>
+                            ))
+                        )}
                     </div>
                 </div>
             </section>
@@ -83,42 +127,23 @@ export default async function Home() {
             <section className="py-12 bg-white border-b border-slate-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        <div className="text-center">
-                            <div className="flex justify-center mb-3">
-                                <div className="p-3 bg-indigo-50 rounded-full text-indigo-600">
-                                    <MapPin className="w-6 h-6" />
+                        {config.stats.map((stat, idx) => {
+                            const Icon = { MapPin, Users, FileText, Globe }[stat.icon] || MapPin;
+                            const colors = ['indigo', 'purple', 'pink', 'orange'];
+                            const color = colors[idx % colors.length];
+
+                            return (
+                                <div key={idx} className="text-center">
+                                    <div className="flex justify-center mb-3">
+                                        <div className={`p-3 bg-${color}-50 rounded-full text-${color}-600`}>
+                                            <Icon className="w-6 h-6" />
+                                        </div>
+                                    </div>
+                                    <div className="text-3xl font-bold text-slate-900 mb-1">{stat.value}</div>
+                                    <div className="text-sm text-slate-500 font-medium uppercase tracking-wide">{stat.label}</div>
                                 </div>
-                            </div>
-                            <div className="text-3xl font-bold text-slate-900 mb-1">{businesses.length}+</div>
-                            <div className="text-sm text-slate-500 font-medium uppercase tracking-wide">Businesses Listed</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="flex justify-center mb-3">
-                                <div className="p-3 bg-purple-50 rounded-full text-purple-600">
-                                    <Users className="w-6 h-6" />
-                                </div>
-                            </div>
-                            <div className="text-3xl font-bold text-slate-900 mb-1">50k+</div>
-                            <div className="text-sm text-slate-500 font-medium uppercase tracking-wide">Active Users</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="flex justify-center mb-3">
-                                <div className="p-3 bg-pink-50 rounded-full text-pink-600">
-                                    <FileText className="w-6 h-6" />
-                                </div>
-                            </div>
-                            <div className="text-3xl font-bold text-slate-900 mb-1">125k+</div>
-                            <div className="text-sm text-slate-500 font-medium uppercase tracking-wide">Reviews Written</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="flex justify-center mb-3">
-                                <div className="p-3 bg-orange-50 rounded-full text-orange-600">
-                                    <Globe className="w-6 h-6" />
-                                </div>
-                            </div>
-                            <div className="text-3xl font-bold text-slate-900 mb-1">75+</div>
-                            <div className="text-sm text-slate-500 font-medium uppercase tracking-wide">Cities Covered</div>
-                        </div>
+                            );
+                        })}
                     </div>
                 </div>
             </section>
@@ -345,19 +370,19 @@ export default async function Home() {
                 </div>
                 <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
                     <h2 className="text-3xl md:text-5xl font-bold mb-6">
-                        Grow Your Business with ShweReview
+                        {config.cta.title}
                     </h2>
                     <p className="text-xl text-indigo-100 mb-10 max-w-2xl mx-auto">
-                        Claim your business profile, respond to reviews, and reach thousands of potential customers in Myanmar.
+                        {config.cta.subtitle}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link href="/business/new">
                             <Button size="lg" className="bg-white text-indigo-900 hover:bg-indigo-50 px-8 py-6 text-lg font-bold w-full sm:w-auto">
-                                List Your Business
+                                {config.cta.buttonText}
                             </Button>
                         </Link>
                         <Link href="/register">
-                            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 px-8 py-6 text-lg font-bold w-full sm:w-auto">
+                            <Button size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white/10 px-8 py-6 text-lg font-bold w-full sm:w-auto">
                                 Create User Account
                             </Button>
                         </Link>

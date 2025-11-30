@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import dbConnect from '@/lib/mongodb';
 import { Business, Review } from '@/lib/models';
+import BusinessGallery from '@/components/BusinessGallery';
+
 import BusinessContent from '@/components/BusinessContent';
 import { Button, Card } from '@/components/ui';
 import { Star, MapPin, CheckCircle, Share2 } from 'lucide-react';
@@ -10,6 +12,7 @@ export const dynamic = 'force-dynamic';
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
 
 async function getBusiness(id) {
     await dbConnect();
@@ -38,6 +41,7 @@ async function getBusiness(id) {
         reviews: JSON.parse(JSON.stringify(reviews))
     };
 }
+
 
 export default async function BusinessProfile({ params }) {
     const { id } = await params;
@@ -137,6 +141,9 @@ export default async function BusinessProfile({ params }) {
                     </div>
                 </div>
             </div>
+
+            {/* Image Gallery */}
+            <BusinessGallery images={business.images} businessName={business.name} />
 
             {/* Content */}
             <BusinessContent business={business} initialReviews={reviews} />

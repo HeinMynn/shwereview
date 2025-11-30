@@ -139,11 +139,36 @@ ReviewSchema.index({ business_id: 1, createdAt: -1 }); // Business page reviews 
 ReportSchema.index({ review_id: 1 });
 NotificationSchema.index({ user_id: 1 });
 
+const HomepageConfigSchema = new mongoose.Schema({
+    hero: {
+        title: { type: String, default: 'Discover & Review Local Businesses' },
+        subtitle: { type: String, default: 'Find trusted businesses in Myanmar.' },
+        backgroundImage: { type: String, default: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?q=80&w=2000&auto=format&fit=crop' },
+        searchPlaceholder: { type: String, default: 'Search for restaurants, hotels, services...' }
+    },
+    stats: [{
+        label: { type: String },
+        value: { type: String },
+        icon: { type: String } // e.g., 'MapPin', 'Users'
+    }],
+    featuredCategories: [{
+        name: { type: String },
+        image: { type: String },
+        count: { type: String }
+    }],
+    cta: {
+        title: { type: String, default: 'Grow Your Business with ShweReview' },
+        subtitle: { type: String, default: 'Claim your business profile, respond to reviews, and reach thousands of potential customers.' },
+        buttonText: { type: String, default: 'List Your Business' }
+    }
+}, { timestamps: true });
+
 // Prevent overwrite on hot reload
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Business = mongoose.models.Business || mongoose.model('Business', BusinessSchema);
 const Review = mongoose.models.Review || mongoose.model('Review', ReviewSchema);
 const Report = mongoose.models.Report || mongoose.model('Report', ReportSchema);
 const Notification = mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
+const HomepageConfig = mongoose.models.HomepageConfig || mongoose.model('HomepageConfig', HomepageConfigSchema);
 
-export { User, Business, Review, Report, Notification };
+export { User, Business, Review, Report, Notification, HomepageConfig };

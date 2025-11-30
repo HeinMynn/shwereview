@@ -28,19 +28,26 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        let imageUrl = `https://placehold.co/600x400/gray/white?text=${encodeURIComponent(name)}`;
+        const processedImages = [];
 
-        if (body.image) {
-            try {
-                const uploadResponse = await cloudinary.uploader.upload(body.image, {
-                    folder: 'shwereview/businesses',
-                });
-                imageUrl = uploadResponse.secure_url;
-            } catch (uploadError) {
-                console.error('Cloudinary upload failed:', uploadError);
-                // Continue with placeholder if upload fails, or return error?
-                // For now, let's continue but log it.
+        // Handle multiple images
+        if (body.images && Array.isArray(body.images) && body.images.length > 0) {
+            for (const img of body.images) {
+                try {
+                    const uploadResponse = await cloudinary.uploader.upload(img, {
+                        folder: 'shwereview/businesses',
+                    });
+                    processedImages.push(uploadResponse.secure_url);
+                } catch (uploadError) {
+                    console.error('Cloudinary upload failed:', uploadError);
+                    // Skip failed uploads
+                }
             }
+        }
+
+        // Fallback placeholder if no images uploaded successfully
+        if (processedImages.length === 0) {
+            processedImages.push(`https://placehold.co/600x400/gray/white?text=${encodeURIComponent(name)}`);
         }
 
         const business = await Business.create({
@@ -53,7 +60,7 @@ export async function POST(request) {
             status: 'pending',
             claim_status: 'unclaimed',
             is_verified: false,
-            images: [imageUrl],
+            images: processedImages,
         });
 
         return NextResponse.json({ success: true, business });

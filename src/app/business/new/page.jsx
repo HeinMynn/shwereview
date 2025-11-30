@@ -19,7 +19,7 @@ export default function NewBusinessPage() {
         description: '',
         address: '',
         category: 'restaurant',
-        image: '',
+        images: [],
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
@@ -63,29 +63,42 @@ export default function NewBusinessPage() {
     };
 
     const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        setErrors(prev => ({ ...prev, image: '' }));
+        const files = Array.from(e.target.files);
+        setErrors(prev => ({ ...prev, images: '' }));
 
-        if (file) {
-            if (file.size > 2 * 1024 * 1024) {
-                setErrors(prev => ({ ...prev, image: 'File size must be less than 2MB' }));
-                e.target.value = '';
+        if (files.length + formData.images.length > 5) {
+            setErrors(prev => ({ ...prev, images: 'You can upload a maximum of 5 images' }));
+            return;
+        }
+
+        files.forEach(file => {
+            if (file.size > 5 * 1024 * 1024) {
+                setErrors(prev => ({ ...prev, images: 'Each file must be less than 5MB' }));
                 return;
             }
 
-            const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             if (!validTypes.includes(file.type)) {
-                setErrors(prev => ({ ...prev, image: 'Only JPG, PNG, and GIF files are allowed' }));
-                e.target.value = '';
+                setErrors(prev => ({ ...prev, images: 'Only JPG, PNG, GIF and WEBP files are allowed' }));
                 return;
             }
 
             const reader = new FileReader();
             reader.onloadend = () => {
-                setFormData(prev => ({ ...prev, image: reader.result }));
+                setFormData(prev => ({ ...prev, images: [...prev.images, reader.result] }));
             };
             reader.readAsDataURL(file);
-        }
+        });
+
+        // Reset input
+        e.target.value = '';
+    };
+
+    const removeImage = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            images: prev.images.filter((_, i) => i !== index)
+        }));
     };
 
     const handleSubmit = async (e) => {
@@ -264,28 +277,39 @@ export default function NewBusinessPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Business Image</label>
-                                {errors.image && (
-                                    <p className="text-sm text-red-600 mb-1">{errors.image}</p>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Business Images</label>
+                                {errors.images && (
+                                    <p className="text-sm text-red-600 mb-1">{errors.images}</p>
                                 )}
                                 <Input
                                     type="file"
-                                    accept=".jpg,.jpeg,.png,.gif"
+                                    accept=".jpg,.jpeg,.png,.gif,.webp"
                                     onChange={handleImageChange}
                                     className="cursor-pointer"
+                                    multiple
                                 />
                                 <p className="text-xs text-gray-500 mt-2">
-                                    Accepted formats: JPG, PNG, GIF (Max 2MB)
-                                    <br />
-                                    Recommended size: 1200x800px (Landscape)
+                                    Accepted formats: JPG, PNG, GIF, WEBP (Max 5MB). Max 5 images.
                                 </p>
-                                {formData.image && (
-                                    <div className="mt-2 relative h-40 w-full rounded-md overflow-hidden border border-slate-200">
-                                        <img
-                                            src={formData.image}
-                                            alt="Preview"
-                                            className="w-full h-full object-cover"
-                                        />
+
+                                {formData.images.length > 0 && (
+                                    <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        {formData.images.map((img, index) => (
+                                            <div key={index} className="relative h-24 rounded-md overflow-hidden border border-slate-200 group">
+                                                <img
+                                                    src={img}
+                                                    alt={`Preview ${index + 1}`}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(index)}
+                                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                                </button>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </div>

@@ -91,6 +91,78 @@ export default function AdminBusinessList({ initialBusinesses }) {
         }
     };
 
+    const [editingBusiness, setEditingBusiness] = useState(null);
+    const [editForm, setEditForm] = useState({ name: '', description: '', address: '', category: '', images: [] });
+    const [imageUploads, setImageUploads] = useState([]); // New images to upload (base64)
+
+    const handleEditClick = (business) => {
+        setEditingBusiness(business);
+        setEditForm({
+            name: business.name,
+            description: business.description || '',
+            address: business.address || '',
+            category: business.category || 'restaurant',
+            images: business.images || []
+        });
+        setImageUploads([]);
+    };
+
+    const handleImageChange = (e) => {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+
+        files.forEach(file => {
+            if (file.size > 5 * 1024 * 1024) return; // Skip > 5MB
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImageUploads(prev => [...prev, reader.result]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const removeImage = (index, isExisting) => {
+        if (isExisting) {
+            setEditForm(prev => ({
+                ...prev,
+                images: prev.images.filter((_, i) => i !== index)
+            }));
+        } else {
+            setImageUploads(prev => prev.filter((_, i) => i !== index));
+        }
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        setLoadingId(editingBusiness._id);
+        try {
+            // Combine existing images and new uploads
+            const allImages = [...editForm.images, ...imageUploads];
+
+            const res = await fetch('/api/admin/businesses/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    businessId: editingBusiness._id,
+                    updates: { ...editForm, images: allImages }
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || 'Failed to update');
+
+            mutate('/api/admin/businesses');
+            setToast({ message: 'Business updated successfully', type: 'success' });
+            setEditingBusiness(null);
+        } catch (error) {
+            console.error(error);
+            setToast({ message: error.message, type: 'error' });
+        } finally {
+            setLoadingId(null);
+        }
+    };
+
     return (
         <div className="space-y-8 relative">
             {toast && (
@@ -100,6 +172,124 @@ export default function AdminBusinessList({ initialBusinesses }) {
                     onClose={() => setToast(null)}
                 />
             )}
+
+            {/* Edit Modal */}
+            {editingBusiness && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold">Edit Business</h3>
+                            <button onClick={() => setEditingBusiness(null)} className="text-gray-500 hover:text-gray-700">
+                                <XCircle className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleEditSubmit} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.name}
+                                        onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                                        className="w-full p-2 border border-gray-300 rounded bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-gray-700">Category</label>
+                                    <select
+                                        value={editForm.category}
+                                        onChange={e => setEditForm({ ...editForm, category: e.target.value })}
+                                        className="w-full p-2 border border-gray-300 rounded bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    >
+                                        <option value="restaurant">Restaurant</option>
+                                        <option value="shop">Shop</option>
+                                        <option value="logistics">Logistics</option>
+                                        <option value="education">Education</option>
+                                        <option value="hotel">Hotel</option>
+                                        <option value="service">Service</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-gray-700">Address</label>
+                                <input
+                                    type="text"
+                                    value={editForm.address}
+                                    onChange={e => setEditForm({ ...editForm, address: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-gray-700">Description</label>
+                                <textarea
+                                    value={editForm.description}
+                                    onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    rows={3}
+                                />
+                            </div>
+
+                            {/* Image Management */}
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Images</label>
+                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 mb-4">
+                                    {/* Existing Images */}
+                                    {editForm.images.map((img, idx) => (
+                                        <div key={`existing-${idx}`} className="relative aspect-square bg-gray-100 rounded overflow-hidden group">
+                                            <img src={img} alt={`Existing ${idx}`} className="w-full h-full object-cover" />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeImage(idx, true)}
+                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <XCircle className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {/* New Uploads */}
+                                    {imageUploads.map((img, idx) => (
+                                        <div key={`new-${idx}`} className="relative aspect-square bg-gray-100 rounded overflow-hidden group border-2 border-indigo-200">
+                                            <img src={img} alt={`New ${idx}`} className="w-full h-full object-cover" />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeImage(idx, false)}
+                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <XCircle className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {/* Upload Button */}
+                                    <label className="flex flex-col items-center justify-center aspect-square border-2 border-dashed border-gray-300 rounded cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-colors">
+                                        <span className="text-3xl text-gray-400">+</span>
+                                        <span className="text-xs text-gray-500 mt-1">Add Image</span>
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            onChange={handleImageChange}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
+                                <Button type="button" variant="outline" onClick={() => setEditingBusiness(null)}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit" disabled={loadingId === editingBusiness._id}>
+                                    {loadingId === editingBusiness._id ? 'Saving...' : 'Save Changes'}
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {/* Pending Claims Section */}
             {businesses.some(b => b.claim_status === 'pending') && (
                 <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
@@ -210,22 +400,32 @@ export default function AdminBusinessList({ initialBusinesses }) {
                                     <div className="text-xs text-gray-600 uppercase mt-1">{business.category}</div>
                                 </div>
 
-                                <button
-                                    onClick={() => toggleVerification(business._id, business.is_verified)}
-                                    disabled={loadingId === business._id}
-                                    className={`flex items-center px-3 py-1.5 rounded text-sm font-bold transition-colors ${business.is_verified
-                                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                        }`}
-                                >
-                                    {loadingId === business._id ? (
-                                        <span className="animate-pulse">...</span>
-                                    ) : business.is_verified ? (
-                                        <CheckCircle className="w-4 h-4" />
-                                    ) : (
-                                        <XCircle className="w-4 h-4" />
-                                    )}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8 text-xs"
+                                        onClick={() => handleEditClick(business)}
+                                    >
+                                        Edit
+                                    </Button>
+                                    <button
+                                        onClick={() => toggleVerification(business._id, business.is_verified)}
+                                        disabled={loadingId === business._id}
+                                        className={`flex items-center px-3 py-1.5 rounded text-sm font-bold transition-colors ${business.is_verified
+                                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                            }`}
+                                    >
+                                        {loadingId === business._id ? (
+                                            <span className="animate-pulse">...</span>
+                                        ) : business.is_verified ? (
+                                            <CheckCircle className="w-4 h-4" />
+                                        ) : (
+                                            <XCircle className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                </div>
                             </div>
 
                             {(!business.status || business.status === 'pending') && (

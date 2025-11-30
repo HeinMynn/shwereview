@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import AdminBusinessList from '@/components/AdminBusinessList';
-import AdminReportList from '@/components/AdminReportList';
+import AdminBusinessList from './AdminBusinessList';
+import AdminReportList from './AdminReportList';
+import AdminHomepageEditor from './AdminHomepageEditor';
 import { Card } from '@/components/ui';
 import { Users, Building2, AlertTriangle, LayoutGrid, FileText, Shield } from 'lucide-react';
 
