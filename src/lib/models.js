@@ -154,7 +154,8 @@ const HomepageConfigSchema = new mongoose.Schema({
     featuredCategories: [{
         name: { type: String },
         image: { type: String },
-        count: { type: String }
+        count: { type: String },
+        link: { type: String }
     }],
     cta: {
         title: { type: String, default: 'Grow Your Business with ShweReview' },

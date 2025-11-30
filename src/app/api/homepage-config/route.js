@@ -25,10 +25,10 @@ export async function GET() {
                     { label: 'Cities Covered', value: '75+', icon: 'Globe' }
                 ],
                 featuredCategories: [
-                    { name: 'Restaurants', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop', count: '1,200+' },
-                    { name: 'Hotels', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop', count: '800+' },
-                    { name: 'Shopping', image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop', count: '2,500+' },
-                    { name: 'Services', image: 'https://images.unsplash.com/photo-1521791136064-7985c2d18854?q=80&w=800&auto=format&fit=crop', count: '1,500+' },
+                    { name: 'Restaurants', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop', count: '1,200+', link: '/search?category=restaurants' },
+                    { name: 'Hotels', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop', count: '800+', link: '/search?category=hotels' },
+                    { name: 'Shopping', image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop', count: '2,500+', link: '/search?category=shopping' },
+                    { name: 'Services', image: 'https://images.unsplash.com/photo-1521791136064-7985c2d18854?q=80&w=800&auto=format&fit=crop', count: '1,500+', link: '/search?category=services' },
                 ],
                 cta: {
                     title: 'Grow Your Business with ShweReview',

@@ -176,6 +176,18 @@ export default function AdminHomepageEditor() {
                                         }}
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Link URL</label>
+                                    <Input
+                                        value={cat.link || ''}
+                                        placeholder={`/search?category=${cat.name.toLowerCase()}`}
+                                        onChange={(e) => {
+                                            const newCats = [...config.featuredCategories];
+                                            newCats[index].link = e.target.value;
+                                            setConfig({ ...config, featuredCategories: newCats });
+                                        }}
+                                    />
+                                </div>
                             </div>
                         ))}
                     </div>

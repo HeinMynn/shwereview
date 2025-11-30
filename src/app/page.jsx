@@ -303,7 +303,7 @@ export default async function Home() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {config.featuredCategories?.map((category) => (
-                            <Link key={category.name} href={`/search?category=${category.name.toLowerCase()}`} className="group relative rounded-2xl overflow-hidden aspect-[4/5] shadow-lg">
+                            <Link key={category.name} href={category.link || `/search?category=${category.name.toLowerCase()}`} className="group relative rounded-2xl overflow-hidden aspect-[4/5] shadow-lg">
                                 <Image
                                     src={category.image}
                                     alt={category.name}
