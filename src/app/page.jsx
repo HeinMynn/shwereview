@@ -43,7 +43,13 @@ async function getHomepageConfig() {
                 title: 'Grow Your Business with ShweReview',
                 subtitle: 'Claim your business profile, respond to reviews, and reach thousands of potential customers in Myanmar.',
                 buttonText: 'List Your Business'
-            }
+            },
+            featuredCategories: [
+                { name: 'Restaurants', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop', count: '1,200+' },
+                { name: 'Hotels', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop', count: '800+' },
+                { name: 'Shopping', image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop', count: '2,500+' },
+                { name: 'Services', image: 'https://images.unsplash.com/photo-1521791136064-7985c2d18854?q=80&w=800&auto=format&fit=crop', count: '1,500+' },
+            ]
         };
     }
     return JSON.parse(JSON.stringify(config));
@@ -296,12 +302,7 @@ export default async function Home() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {[
-                            { name: 'Restaurants', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop', count: '1,200+' },
-                            { name: 'Hotels', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop', count: '800+' },
-                            { name: 'Shopping', image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop', count: '2,500+' },
-                            { name: 'Services', image: 'https://images.unsplash.com/photo-1521791136064-7985c2d18854?q=80&w=800&auto=format&fit=crop', count: '1,500+' },
-                        ].map((category) => (
+                        {config.featuredCategories?.map((category) => (
                             <Link key={category.name} href={`/search?category=${category.name.toLowerCase()}`} className="group relative rounded-2xl overflow-hidden aspect-[4/5] shadow-lg">
                                 <Image
                                     src={category.image}

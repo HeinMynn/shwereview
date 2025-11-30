@@ -136,6 +136,51 @@ export default function AdminHomepageEditor() {
                     </div>
                 </Card>
 
+                {/* Featured Categories Section */}
+                <Card className="p-6 space-y-4">
+                    <h3 className="text-lg font-semibold border-b pb-2">Featured Categories</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {config.featuredCategories?.map((cat, index) => (
+                            <div key={index} className="p-4 border rounded bg-slate-50 space-y-2">
+                                <label className="block text-xs font-bold uppercase text-slate-500">Category {index + 1}</label>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Name</label>
+                                    <Input
+                                        value={cat.name}
+                                        onChange={(e) => {
+                                            const newCats = [...config.featuredCategories];
+                                            newCats[index].name = e.target.value;
+                                            setConfig({ ...config, featuredCategories: newCats });
+                                        }}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Image URL</label>
+                                    <Input
+                                        value={cat.image}
+                                        onChange={(e) => {
+                                            const newCats = [...config.featuredCategories];
+                                            newCats[index].image = e.target.value;
+                                            setConfig({ ...config, featuredCategories: newCats });
+                                        }}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Count Label</label>
+                                    <Input
+                                        value={cat.count}
+                                        onChange={(e) => {
+                                            const newCats = [...config.featuredCategories];
+                                            newCats[index].count = e.target.value;
+                                            setConfig({ ...config, featuredCategories: newCats });
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+
                 {/* CTA Section */}
                 <Card className="p-6 space-y-4">
                     <h3 className="text-lg font-semibold border-b pb-2">CTA Section</h3>

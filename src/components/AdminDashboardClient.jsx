@@ -46,6 +46,7 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                     <TabButton id="businesses" label="Businesses" icon={Building2} />
                     <TabButton id="users" label="Users" icon={Users} />
                     <TabButton id="reports" label="Reports" icon={FileText} />
+                    <TabButton id="homepage" label="Homepage Editor" icon={LayoutGrid} />
                 </div>
 
                 {activeTab === 'overview' && (
@@ -145,6 +146,10 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
 
                 {activeTab === 'reports' && (
                     <AdminReportList />
+                )}
+
+                {activeTab === 'homepage' && (
+                    <AdminHomepageEditor />
                 )}
             </div>
         </div>
