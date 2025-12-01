@@ -20,6 +20,8 @@ const UserSchema = new mongoose.Schema({
     email_verified: { type: Boolean, default: false },
     verification_token: { type: String },
     verification_token_expires: { type: Date },
+    phone: { type: String, unique: true, sparse: true },
+    phone_verified: { type: Boolean, default: false },
 }, { timestamps: true });
 
 const BusinessSchema = new mongoose.Schema({
@@ -133,6 +135,13 @@ const NotificationSchema = new mongoose.Schema({
     metadata: { type: Map, of: mongoose.Schema.Types.Mixed }, // Additional data like business_id, business_name
 }, { timestamps: true });
 
+const TelegramVerificationSchema = new mongoose.Schema({
+    token: { type: String, required: true, unique: true },
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    chat_id: { type: String },
+    createdAt: { type: Date, default: Date.now, expires: 600 } // Expires in 10 minutes
+});
+
 // Indexes
 BusinessSchema.index({ category: 1 });
 BusinessSchema.index({ owner_id: 1 });
@@ -188,5 +197,6 @@ const ReviewVote = mongoose.models.ReviewVote || mongoose.model('ReviewVote', Re
 const Report = mongoose.models.Report || mongoose.model('Report', ReportSchema);
 const Notification = mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
 const HomepageConfig = mongoose.models.HomepageConfig || mongoose.model('HomepageConfig', HomepageConfigSchema);
+const TelegramVerification = mongoose.models.TelegramVerification || mongoose.model('TelegramVerification', TelegramVerificationSchema);
 
-export { User, Business, Review, ReviewVote, Report, Notification, HomepageConfig };
+export { User, Business, Review, ReviewVote, Report, Notification, HomepageConfig, TelegramVerification };
