@@ -5,7 +5,8 @@ import dbConnect from '@/lib/mongodb';
 import { User, Review } from '@/lib/models';
 import { Card, Button } from '@/components/ui';
 import Link from 'next/link';
-import { ArrowLeft, Star, BadgeCheck } from 'lucide-react';
+import { ArrowLeft, Star } from 'lucide-react';
+import VerifiedBadge from '@/components/VerifiedBadge';
 
 import AdminUserControls from '@/components/AdminUserControls';
 
@@ -49,13 +50,7 @@ export default async function AdminUserDetail({ params }) {
                                 <div className="font-bold text-lg flex items-center gap-2">
                                     {user.name}
                                     {user.phone_verified && (
-                                        <div className="group relative flex items-center">
-                                            <BadgeCheck className="w-5 h-5 text-white fill-blue-500" />
-                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                                                Verified
-                                                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                                            </div>
-                                        </div>
+                                        <VerifiedBadge />
                                     )}
                                 </div>
                             </div>
