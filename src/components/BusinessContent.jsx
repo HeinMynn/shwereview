@@ -6,7 +6,7 @@ import { Card, Button } from '@/components/ui';
 import ReviewForm from '@/components/ReviewForm';
 import ReportModal from '@/components/ReportModal';
 import Toast from '@/components/Toast';
-import { Pencil, Star, MapPin, Share2, Flag, Eye, EyeOff } from 'lucide-react';
+import { Pencil, Star, MapPin, Share2, Flag, Eye, EyeOff, ThumbsUp, ThumbsDown } from 'lucide-react';
 import Link from 'next/link';
 
 import Lightbox from '@/components/Lightbox';
@@ -31,10 +31,93 @@ export default function BusinessContent({ business, initialReviews }) {
         setLightboxOpen(true);
     };
 
+    const [userVotes, setUserVotes] = useState({});
+
     // Sync state with props
     useEffect(() => {
         setReviews(initialReviews);
     }, [initialReviews]);
+
+    // Fetch user votes
+    useEffect(() => {
+        if (session && initialReviews.length > 0) {
+            const reviewIds = initialReviews.map(r => r._id);
+            fetch('/api/reviews/user-votes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reviewIds })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.votes) setUserVotes(data.votes);
+                })
+                .catch(err => console.error('Failed to fetch votes', err));
+        }
+    }, [session, initialReviews]);
+
+    const handleVote = async (reviewId, voteType) => {
+        if (!session) {
+            setToast({ message: 'Please login to vote', type: 'error' });
+            return;
+        }
+
+        // Optimistic update
+        const previousVote = userVotes[reviewId];
+        const isRemoving = previousVote === voteType;
+        const isSwitching = previousVote && previousVote !== voteType;
+
+        setUserVotes(prev => {
+            const newVotes = { ...prev };
+            if (isRemoving) delete newVotes[reviewId];
+            else newVotes[reviewId] = voteType;
+            return newVotes;
+        });
+
+        setReviews(prev => prev.map(r => {
+            if (r._id !== reviewId) return r;
+            let helpful = r.helpful_count || 0;
+            let notHelpful = r.not_helpful_count || 0;
+
+            if (isRemoving) {
+                if (voteType === 'helpful') helpful--;
+                else notHelpful--;
+            } else if (isSwitching) {
+                if (voteType === 'helpful') { helpful++; notHelpful--; }
+                else { notHelpful++; helpful--; }
+            } else {
+                // New vote
+                if (voteType === 'helpful') helpful++;
+                else notHelpful++;
+            }
+            return { ...r, helpful_count: helpful, not_helpful_count: notHelpful };
+        }));
+
+        try {
+            const res = await fetch('/api/reviews/vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reviewId, voteType }),
+            });
+
+            if (!res.ok) throw new Error('Vote failed');
+
+            const data = await res.json();
+            // Sync with server data to be sure
+            setReviews(prev => prev.map(r =>
+                r._id === reviewId ? { ...r, helpful_count: data.helpful_count, not_helpful_count: data.not_helpful_count } : r
+            ));
+            setUserVotes(prev => {
+                const newVotes = { ...prev };
+                if (data.user_vote) newVotes[reviewId] = data.user_vote;
+                else delete newVotes[reviewId];
+                return newVotes;
+            });
+
+        } catch (error) {
+            console.error(error);
+            setToast({ message: 'Failed to vote', type: 'error' });
+        }
+    };
 
     const userReview = session ? reviews.find(r => (r.user_id?._id === session.user.id || r.user_id === session.user.id) && !r.is_deleted) : null;
     const isOwner = session?.user?.id === business.owner_id;
@@ -269,10 +352,31 @@ export default function BusinessContent({ business, initialReviews }) {
                         )}
 
                         <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={`h-8 px-2 gap-1 ${userVotes[review._id] === 'helpful' ? 'text-green-600 bg-green-50' : 'text-slate-500 hover:text-slate-700'}`}
+                                    onClick={() => handleVote(review._id, 'helpful')}
+                                >
+                                    <ThumbsUp className={`w-4 h-4 ${userVotes[review._id] === 'helpful' ? 'fill-current' : ''}`} />
+                                    <span>{review.helpful_count || 0}</span>
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={`h-8 px-2 gap-1 ${userVotes[review._id] === 'not_helpful' ? 'text-red-600 bg-red-50' : 'text-slate-500 hover:text-slate-700'}`}
+                                    onClick={() => handleVote(review._id, 'not_helpful')}
+                                >
+                                    <ThumbsDown className={`w-4 h-4 ${userVotes[review._id] === 'not_helpful' ? 'fill-current' : ''}`} />
+                                    <span>{review.not_helpful_count || 0}</span>
+                                </Button>
+                            </div>
+
                             {session && session.user.id !== review.user_id?._id && (
                                 <button
                                     onClick={() => setReportingReviewId(review._id)}
-                                    className="text-sm text-slate-600 hover:text-red-600 font-medium flex items-center gap-1"
+                                    className="text-sm text-slate-600 hover:text-red-600 font-medium flex items-center gap-1 ml-auto"
                                 >
                                     <Flag className="w-3 h-3" /> Report
                                 </button>

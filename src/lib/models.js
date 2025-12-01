@@ -85,8 +85,23 @@ const ReviewSchema = new mongoose.Schema({
         createdAt: { type: Date, default: Date.now }
     },
     is_deleted: { type: Boolean, default: false },
-    deletedAt: { type: Date }
+    deletedAt: { type: Date },
+    helpful_count: { type: Number, default: 0 },
+    not_helpful_count: { type: Number, default: 0 }
 }, { timestamps: true });
+
+const ReviewVoteSchema = new mongoose.Schema({
+    review_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Review', required: true },
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    vote_type: {
+        type: String,
+        enum: ['helpful', 'not_helpful'],
+        required: true
+    }
+}, { timestamps: true });
+
+// Ensure one vote per user per review
+ReviewVoteSchema.index({ review_id: 1, user_id: 1 }, { unique: true });
 
 const ReportSchema = new mongoose.Schema({
     reporter_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -169,8 +184,9 @@ const HomepageConfigSchema = new mongoose.Schema({
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Business = mongoose.models.Business || mongoose.model('Business', BusinessSchema);
 const Review = mongoose.models.Review || mongoose.model('Review', ReviewSchema);
+const ReviewVote = mongoose.models.ReviewVote || mongoose.model('ReviewVote', ReviewVoteSchema);
 const Report = mongoose.models.Report || mongoose.model('Report', ReportSchema);
 const Notification = mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
 const HomepageConfig = mongoose.models.HomepageConfig || mongoose.model('HomepageConfig', HomepageConfigSchema);
 
-export { User, Business, Review, Report, Notification, HomepageConfig };
+export { User, Business, Review, ReviewVote, Report, Notification, HomepageConfig };
