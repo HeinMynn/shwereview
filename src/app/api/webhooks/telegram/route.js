@@ -27,6 +27,11 @@ async function sendTelegramMessage(chatId, text, options = {}) {
     }
 }
 
+export async function GET(request) {
+    console.log('GET request received at webhook endpoint');
+    return NextResponse.json({ status: 'Webhook Active', message: 'Send POST requests here from Telegram' });
+}
+
 export async function POST(request) {
     try {
         const update = await request.json();
