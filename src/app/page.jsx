@@ -5,7 +5,7 @@ import { Search, Star, MapPin, TrendingUp, Users, FileText, Globe, CheckCircle, 
 import dbConnect from '@/lib/mongodb';
 import { Business, HomepageConfig } from '@/lib/models';
 
-export const revalidate = 60;
+export const revalidate = 0;
 
 async function getBusinesses() {
     await dbConnect();

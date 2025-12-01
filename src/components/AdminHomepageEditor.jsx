@@ -87,10 +87,56 @@ export default function AdminHomepageEditor() {
                         </div>
                         <div className="col-span-2">
                             <label className="block text-sm font-medium mb-1">Background Image URL</label>
-                            <Input
-                                value={config.hero.backgroundImage}
-                                onChange={(e) => setConfig({ ...config, hero: { ...config.hero, backgroundImage: e.target.value } })}
-                            />
+                            <div className="flex gap-2">
+                                <Input
+                                    value={config.hero.backgroundImage}
+                                    onChange={(e) => setConfig({ ...config, hero: { ...config.hero, backgroundImage: e.target.value } })}
+                                    className="flex-1"
+                                />
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        id="hero-image-upload"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+
+                                            const formData = new FormData();
+                                            formData.append('file', file);
+
+                                            try {
+                                                setLoading(true); // Re-use loading state or add a specific one? Let's use a local one if possible, but for now re-use global or add a toast.
+                                                // Actually, let's just show a toast or change button text.
+                                                // Better: add a small loading indicator next to input.
+                                                const res = await fetch('/api/upload/cloudinary', {
+                                                    method: 'POST',
+                                                    body: formData,
+                                                });
+                                                const data = await res.json();
+                                                if (data.success) {
+                                                    setConfig({ ...config, hero: { ...config.hero, backgroundImage: data.url } });
+                                                    setMessage({ type: 'success', text: 'Image uploaded successfully!' });
+                                                } else {
+                                                    throw new Error(data.error || 'Upload failed');
+                                                }
+                                            } catch (error) {
+                                                setMessage({ type: 'error', text: error.message });
+                                            } finally {
+                                                setLoading(false);
+                                            }
+                                        }}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => document.getElementById('hero-image-upload').click()}
+                                    >
+                                        Upload
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                         <div className="col-span-2">
                             <label className="block text-sm font-medium mb-1">Search Placeholder</label>
