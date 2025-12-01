@@ -5,9 +5,13 @@ import { TelegramVerification, User } from '@/lib/models';
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 async function sendTelegramMessage(chatId, text, options = {}) {
-    if (!TELEGRAM_BOT_TOKEN) return;
+    console.log(`Attempting to send message to ${chatId}: ${text}`);
+    if (!TELEGRAM_BOT_TOKEN) {
+        console.error('TELEGRAM_BOT_TOKEN is missing in environment variables!');
+        return;
+    }
     try {
-        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -16,6 +20,8 @@ async function sendTelegramMessage(chatId, text, options = {}) {
                 ...options
             })
         });
+        const data = await res.json();
+        console.log('Telegram API Response:', JSON.stringify(data));
     } catch (error) {
         console.error('Failed to send Telegram message:', error);
     }
@@ -24,19 +30,29 @@ async function sendTelegramMessage(chatId, text, options = {}) {
 export async function POST(request) {
     try {
         const update = await request.json();
+        console.log('Telegram Webhook Received:', JSON.stringify(update, null, 2));
+
+        if (!TELEGRAM_BOT_TOKEN) {
+            console.error('CRITICAL: TELEGRAM_BOT_TOKEN is not set!');
+        }
 
         // Handle /start <token>
         if (update.message && update.message.text && update.message.text.startsWith('/start ')) {
             const token = update.message.text.split(' ')[1];
             const chatId = update.message.chat.id;
+            console.log(`Processing /start with token: ${token} for chat: ${chatId}`);
 
             await dbConnect();
+            console.log('Database connected');
+
             const verification = await TelegramVerification.findOne({ token });
+            console.log('Verification record found:', !!verification);
 
             if (verification) {
                 // Update verification with chat_id
                 verification.chat_id = chatId;
                 await verification.save();
+                console.log('Verification record updated with chat_id');
 
                 // Request contact
                 await sendTelegramMessage(chatId, 'Please share your contact to verify your phone number.', {
@@ -50,6 +66,7 @@ export async function POST(request) {
                     }
                 });
             } else {
+                console.warn('Invalid token received');
                 await sendTelegramMessage(chatId, 'Invalid or expired verification link. Please try again from the website.');
             }
         }
@@ -58,6 +75,7 @@ export async function POST(request) {
         if (update.message && update.message.contact) {
             const contact = update.message.contact;
             const chatId = update.message.chat.id;
+            console.log('Received contact:', JSON.stringify(contact));
 
             await dbConnect();
             // Find verification by chat_id (assuming user clicked start first)
@@ -65,6 +83,7 @@ export async function POST(request) {
             // but the flow is Start -> Share.
             // Let's find the most recent verification for this chat_id
             const verification = await TelegramVerification.findOne({ chat_id: chatId }).sort({ createdAt: -1 });
+            console.log('Verification record for contact found:', !!verification);
 
             if (verification) {
                 const phoneNumber = contact.phone_number.startsWith('+') ? contact.phone_number : `+${contact.phone_number}`;
@@ -74,6 +93,7 @@ export async function POST(request) {
                     phone: phoneNumber,
                     phone_verified: true
                 });
+                console.log(`User ${verification.user_id} verified with phone ${phoneNumber}`);
 
                 // Delete verification record
                 await TelegramVerification.findByIdAndDelete(verification._id);
@@ -82,6 +102,7 @@ export async function POST(request) {
                     reply_markup: { remove_keyboard: true }
                 });
             } else {
+                console.warn('No pending verification for this contact share');
                 await sendTelegramMessage(chatId, 'No pending verification found. Please start from the website.', {
                     reply_markup: { remove_keyboard: true }
                 });
