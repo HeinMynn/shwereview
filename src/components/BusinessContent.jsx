@@ -6,7 +6,7 @@ import { Card, Button } from '@/components/ui';
 import ReviewForm from '@/components/ReviewForm';
 import ReportModal from '@/components/ReportModal';
 import Toast from '@/components/Toast';
-import { Pencil, Star, MapPin, Share2, Flag, Eye, EyeOff, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Pencil, Star, MapPin, Share2, Flag, Eye, EyeOff, ThumbsUp, ThumbsDown, BadgeCheck } from 'lucide-react';
 import Link from 'next/link';
 
 import Lightbox from '@/components/Lightbox';
@@ -220,13 +220,24 @@ export default function BusinessContent({ business, initialReviews }) {
                                                 </Link>
                                             ) : 'Anonymous'
                                         ) : (
-                                            isAdmin ? (
-                                                <Link href={`/admin/users/${review.user_id?._id}`} className="hover:underline text-blue-600">
-                                                    {review.user_id?.name || 'Unknown User'}
-                                                </Link>
-                                            ) : (
-                                                review.user_id?.name || 'Unknown User'
-                                            )
+                                            <div className="flex items-center gap-1">
+                                                {isAdmin ? (
+                                                    <Link href={`/admin/users/${review.user_id?._id}`} className="hover:underline text-blue-600">
+                                                        {review.user_id?.name || 'Unknown User'}
+                                                    </Link>
+                                                ) : (
+                                                    <span>{review.user_id?.name || 'Unknown User'}</span>
+                                                )}
+                                                {review.user_id?.phone_verified && (
+                                                    <div className="group relative flex items-center">
+                                                        <BadgeCheck className="w-4 h-4 text-white fill-blue-500" />
+                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                                                            Phone number verified by telegram
+                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                     <div className="text-xs text-gray-600">

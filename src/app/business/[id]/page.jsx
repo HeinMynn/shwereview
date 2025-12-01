@@ -31,7 +31,7 @@ async function getBusiness(id) {
     }
 
     const reviews = await Review.find({ business_id: id })
-        .populate('user_id', 'name avatar badges')
+        .populate('user_id', 'name avatar badges phone_verified')
         .sort({ createdAt: -1 })
         .limit(20) // Limit initial reviews to improve performance
         .lean();

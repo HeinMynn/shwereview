@@ -93,6 +93,17 @@ export async function POST(request) {
             if (verification) {
                 const phoneNumber = contact.phone_number.startsWith('+') ? contact.phone_number : `+${contact.phone_number}`;
 
+                // Check if phone number is already used by another user
+                const existingUser = await User.findOne({ phone: phoneNumber });
+
+                if (existingUser && existingUser._id.toString() !== verification.user_id.toString()) {
+                    console.warn(`Phone number ${phoneNumber} is already in use by user ${existingUser._id}`);
+                    await sendTelegramMessage(chatId, 'This phone number is already registered to another account. Please use a different Telegram account. You need to start the verification process again from the website.', {
+                        reply_markup: { remove_keyboard: true }
+                    });
+                    return NextResponse.json({ ok: true });
+                }
+
                 // Update User
                 await User.findByIdAndUpdate(verification.user_id, {
                     phone: phoneNumber,
