@@ -9,10 +9,29 @@ export const revalidate = 60;
 
 async function getBusinesses() {
     await dbConnect();
-    const businesses = await Business.find({ status: 'approved' })
-        .sort({ aggregate_rating: -1 })
-        .limit(12)
-        .lean();
+    const businesses = await Business.aggregate([
+        { $match: { status: 'approved' } },
+        {
+            $lookup: {
+                from: 'reviews',
+                localField: '_id',
+                foreignField: 'business_id',
+                as: 'reviews'
+            }
+        },
+        {
+            $addFields: {
+                review_count: { $size: '$reviews' }
+            }
+        },
+        {
+            $project: {
+                reviews: 0 // Exclude the full reviews array to save bandwidth
+            }
+        },
+        { $sort: { aggregate_rating: -1 } },
+        { $limit: 12 }
+    ]);
     return JSON.parse(JSON.stringify(businesses));
 }
 
@@ -224,7 +243,7 @@ export default async function Home() {
                                             <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                                                 <div className="flex items-center gap-2 text-sm text-slate-500">
                                                     <Users className="w-4 h-4" />
-                                                    <span>{Math.floor(Math.random() * 50) + 10} reviews</span>
+                                                    <span>{business.review_count || 0} reviews</span>
                                                 </div>
                                                 {business.is_verified && (
                                                     <div className="flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-1 rounded-full">
@@ -377,7 +396,7 @@ export default async function Home() {
                         {config.cta.subtitle}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link href="/business/new">
+                        <Link href={config.cta.link || '/business/new'}>
                             <Button size="lg" className="bg-white text-indigo-900 hover:bg-indigo-50 px-8 py-6 text-lg font-bold w-full sm:w-auto">
                                 {config.cta.buttonText}
                             </Button>

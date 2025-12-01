@@ -218,6 +218,14 @@ export default function AdminHomepageEditor() {
                                 onChange={(e) => setConfig({ ...config, cta: { ...config.cta, buttonText: e.target.value } })}
                             />
                         </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Button Link URL</label>
+                            <Input
+                                value={config.cta.link || ''}
+                                placeholder="/business/new"
+                                onChange={(e) => setConfig({ ...config, cta: { ...config.cta, link: e.target.value } })}
+                            />
+                        </div>
                     </div>
                 </Card>
             </form>

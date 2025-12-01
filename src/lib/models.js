@@ -160,7 +160,8 @@ const HomepageConfigSchema = new mongoose.Schema({
     cta: {
         title: { type: String, default: 'Grow Your Business with ShweReview' },
         subtitle: { type: String, default: 'Claim your business profile, respond to reviews, and reach thousands of potential customers.' },
-        buttonText: { type: String, default: 'List Your Business' }
+        buttonText: { type: String, default: 'List Your Business' },
+        link: { type: String, default: '/business/new' }
     }
 }, { timestamps: true });
 
