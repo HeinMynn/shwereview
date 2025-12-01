@@ -139,6 +139,11 @@ const TelegramVerificationSchema = new mongoose.Schema({
     token: { type: String, required: true, unique: true },
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     chat_id: { type: String },
+    status: {
+        type: String,
+        enum: ['pending', 'verified', 'failed'],
+        default: 'pending'
+    },
     createdAt: { type: Date, default: Date.now, expires: 600 } // Expires in 10 minutes
 });
 

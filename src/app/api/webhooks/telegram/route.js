@@ -101,6 +101,11 @@ export async function POST(request) {
                     await sendTelegramMessage(chatId, 'This phone number is already registered to another account. Please use a different Telegram account. You need to start the verification process again from the website.', {
                         reply_markup: { remove_keyboard: true }
                     });
+
+                    // Mark verification as failed so frontend can show error
+                    verification.status = 'failed';
+                    await verification.save();
+
                     return NextResponse.json({ ok: true });
                 }
 

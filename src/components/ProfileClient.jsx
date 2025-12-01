@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import { Card, Button } from '@/components/ui';
-import { Star, MessageSquare, Shield, LayoutDashboard, LogOut } from 'lucide-react';
+import { Star, MessageSquare, Shield, LayoutDashboard, LogOut, BadgeCheck } from 'lucide-react';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 
@@ -46,7 +46,18 @@ export default function ProfileClient({ data }) {
                                 user.name.charAt(0).toUpperCase()
                             )}
                         </div>
-                        <h1 className="text-2xl font-bold text-slate-900">{user.name}</h1>
+                        <h1 className="text-2xl font-bold text-slate-900 flex items-center justify-center gap-2">
+                            {user.name}
+                            {user.phone_verified && (
+                                <div className="group relative flex items-center">
+                                    <BadgeCheck className="w-5 h-5 text-white fill-blue-500" />
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                                        Phone number verified by telegram
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>
+                            )}
+                        </h1>
                         <p className="text-slate-700 font-medium">{user.email}</p>
 
                         <div className="mt-6 flex flex-wrap justify-center gap-3">

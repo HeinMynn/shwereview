@@ -6,7 +6,7 @@ import AdminBusinessList from './AdminBusinessList';
 import AdminReportList from './AdminReportList';
 import AdminHomepageEditor from './AdminHomepageEditor';
 import { Card } from '@/components/ui';
-import { Users, Building2, AlertTriangle, LayoutGrid, FileText, Shield } from 'lucide-react';
+import { Users, Building2, AlertTriangle, LayoutGrid, FileText, Shield, BadgeCheck } from 'lucide-react';
 
 export default function AdminDashboardClient({ initialUsers, initialBusinesses }) {
     const [activeTab, setActiveTab] = useState('overview');
@@ -114,7 +114,18 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                                                     {user.name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                                                    <div className="text-sm font-medium text-gray-900 flex items-center gap-1">
+                                                        {user.name}
+                                                        {user.phone_verified && (
+                                                            <div className="group relative flex items-center">
+                                                                <BadgeCheck className="w-4 h-4 text-white fill-blue-500" />
+                                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                                                                    Verified
+                                                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                     <div className="text-sm text-gray-600">{user.email}</div>
                                                 </div>
                                             </div>

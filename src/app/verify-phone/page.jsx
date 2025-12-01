@@ -14,6 +14,8 @@ export default function VerifyPhonePage() {
     const [verifying, setVerifying] = useState(false);
     const [verified, setVerified] = useState(false);
 
+    const [error, setError] = useState('');
+
     useEffect(() => {
         if (status === 'unauthenticated') {
             router.push('/login');
@@ -22,16 +24,21 @@ export default function VerifyPhonePage() {
 
     // Poll for status
     useEffect(() => {
-        if (!botLink || verified) return;
+        if (!botLink || verified || error) return;
 
         const interval = setInterval(async () => {
             try {
                 const res = await fetch('/api/auth/status');
                 const data = await res.json();
+
                 if (data.verified) {
                     setVerified(true);
                     clearInterval(interval);
                     setTimeout(() => router.push('/dashboard'), 3000);
+                } else if (data.error === 'duplicate_phone') {
+                    setError('This phone number is already registered to another account. Please use a different Telegram account.');
+                    setVerifying(false);
+                    clearInterval(interval);
                 }
             } catch (error) {
                 console.error('Polling error', error);
@@ -39,10 +46,11 @@ export default function VerifyPhonePage() {
         }, 3000);
 
         return () => clearInterval(interval);
-    }, [botLink, verified, router]);
+    }, [botLink, verified, error, router]);
 
     const startVerification = async () => {
         setLoading(true);
+        setError('');
         try {
             const res = await fetch('/api/auth/telegram/generate', { method: 'POST' });
             const data = await res.json();
@@ -85,6 +93,12 @@ export default function VerifyPhonePage() {
                             </p>
                         </div>
 
+                        {error && (
+                            <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200">
+                                {error}
+                            </div>
+                        )}
+
                         {!verifying ? (
                             <Button
                                 size="lg"
@@ -93,7 +107,7 @@ export default function VerifyPhonePage() {
                                 disabled={loading}
                             >
                                 {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
-                                Open Telegram
+                                {error ? 'Try Again' : 'Open Telegram'}
                             </Button>
                         ) : (
                             <div className="space-y-4">
