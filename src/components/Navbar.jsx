@@ -104,6 +104,7 @@ export default function Navbar() {
                             <Link href="/search" className="text-slate-500 hover:text-indigo-600">
                                 <Search className="w-5 h-5" />
                             </Link>
+                            {session && <NotificationDropdown />}
                             <button
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                                 className="text-slate-500 hover:text-slate-900 focus:outline-none"

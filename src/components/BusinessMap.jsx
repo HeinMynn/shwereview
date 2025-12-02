@@ -62,7 +62,7 @@ export default function BusinessMap({ businesses }) {
         <MapContainer
             center={center}
             zoom={13}
-            style={{ height: '100%', width: '100%', minHeight: '400px', borderRadius: '0.5rem' }}
+            style={{ height: '100%', width: '100%', minHeight: '400px', borderRadius: '0.5rem', zIndex: 0 }}
             scrollWheelZoom={false}
         >
             <TileLayer

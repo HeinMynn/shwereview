@@ -27,6 +27,7 @@ export default function AdminBusinessList({ initialBusinesses }) {
     const businesses = data?.businesses || [];
     const [loadingId, setLoadingId] = useState(null);
     const [toast, setToast] = useState(null);
+    const [geoStatus, setGeoStatus] = useState(null);
 
     const updateStatus = async (businessId, newStatus) => {
         console.log('Updating status for:', businessId, 'to', newStatus);
@@ -221,41 +222,64 @@ export default function AdminBusinessList({ initialBusinesses }) {
 
                             <div>
                                 <label className="block text-sm font-medium mb-1 text-gray-700">Address</label>
-                                <div className="flex gap-2">
+                                <div className="flex flex-col md:flex-row gap-2">
+                                    <select
+                                        value={editForm.country || 'Myanmar'}
+                                        onChange={e => setEditForm({ ...editForm, country: e.target.value })}
+                                        className="w-full md:w-32 p-2 border border-gray-300 rounded bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    >
+                                        <option value="Myanmar">Myanmar</option>
+                                        <option value="Singapore">Singapore</option>
+                                        <option value="Thailand">Thailand</option>
+                                        <option value="Malaysia">Malaysia</option>
+                                        <option value="Vietnam">Vietnam</option>
+                                    </select>
                                     <input
                                         type="text"
                                         value={editForm.address}
                                         onChange={e => setEditForm({ ...editForm, address: e.target.value })}
+                                        placeholder="Enter Street, City"
                                         className="flex-1 p-2 border border-gray-300 rounded bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                     />
                                     <Button
                                         type="button"
                                         variant="outline"
+                                        className="w-full md:w-auto whitespace-nowrap"
                                         onClick={async () => {
                                             if (!editForm.address) return;
-                                            setToast({ message: 'Fetching coordinates...', type: 'info' });
+                                            setGeoStatus({ message: 'Fetching...', type: 'info' });
                                             try {
-                                                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(editForm.address)}`);
+                                                const query = `${editForm.address}, ${editForm.country || 'Myanmar'}`;
+                                                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
                                                 const data = await res.json();
                                                 if (data && data.length > 0) {
-                                                    const { lat, lon } = data[0];
+                                                    const { lat, lon, display_name } = data[0];
                                                     setEditForm(prev => ({
                                                         ...prev,
+                                                        address: display_name, // Auto-fill full address
                                                         geo_coordinates: { lat: parseFloat(lat), lng: parseFloat(lon) }
                                                     }));
-                                                    setToast({ message: 'Coordinates updated!', type: 'success' });
+                                                    setGeoStatus({ message: 'Address found!', type: 'success' });
+                                                    setTimeout(() => setGeoStatus(null), 3000);
                                                 } else {
-                                                    setToast({ message: 'Address not found', type: 'error' });
+                                                    setGeoStatus({ message: 'Address not found', type: 'error' });
                                                 }
                                             } catch (err) {
                                                 console.error(err);
-                                                setToast({ message: 'Geocoding failed', type: 'error' });
+                                                setGeoStatus({ message: 'Failed to fetch', type: 'error' });
                                             }
                                         }}
                                     >
-                                        📍 Get Coords
+                                        Get Address
                                     </Button>
                                 </div>
+                                {geoStatus && (
+                                    <p className={`text-xs mt-1 ${geoStatus.type === 'success' ? 'text-green-600' :
+                                        geoStatus.type === 'error' ? 'text-red-600' : 'text-blue-600'
+                                        }`}>
+                                        {geoStatus.message}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Location Picker */}
