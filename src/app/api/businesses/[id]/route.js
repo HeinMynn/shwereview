@@ -31,7 +31,7 @@ export async function GET(request, { params }) {
         }
 
         const reviews = await Review.find({ business_id: id })
-            .populate('user_id', 'name avatar badges')
+            .populate('user_id', 'name avatar badges phone_verified')
             .sort({ createdAt: -1 });
 
         return NextResponse.json({ business, reviews });

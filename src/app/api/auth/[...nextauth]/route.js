@@ -50,6 +50,7 @@ export const authOptions = {
                     image: user.avatar,
                     account_status: user.account_status,
                     warning_count: user.warning_count,
+                    phone_verified: user.phone_verified,
                 };
             },
         }),
@@ -103,6 +104,7 @@ export const authOptions = {
                     token.id = dbUser._id.toString();
                     token.account_status = dbUser.account_status;
                     token.warning_count = dbUser.warning_count;
+                    token.phone_verified = dbUser.phone_verified;
                 }
             }
 
@@ -115,6 +117,7 @@ export const authOptions = {
                     token.role = freshUser.role;
                     token.account_status = freshUser.account_status;
                     token.warning_count = freshUser.warning_count;
+                    token.phone_verified = freshUser.phone_verified;
                 }
             }
 
@@ -126,6 +129,7 @@ export const authOptions = {
                 session.user.id = token.id;
                 session.user.account_status = token.account_status;
                 session.user.warning_count = token.warning_count;
+                session.user.phone_verified = token.phone_verified;
             }
             return session;
         },

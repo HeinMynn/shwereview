@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { Card, Button } from '@/components/ui';
 import { Star, MessageSquare, Shield, LayoutDashboard, LogOut } from 'lucide-react';
+import VerifiedBadge from './VerifiedBadge';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 
@@ -46,7 +47,12 @@ export default function ProfileClient({ data }) {
                                 user.name.charAt(0).toUpperCase()
                             )}
                         </div>
-                        <h1 className="text-2xl font-bold text-slate-900">{user.name}</h1>
+                        <h1 className="text-2xl font-bold text-slate-900 flex items-center justify-center gap-2">
+                            {user.name}
+                            {user.phone_verified && (
+                                <VerifiedBadge />
+                            )}
+                        </h1>
                         <p className="text-slate-700 font-medium">{user.email}</p>
 
                         <div className="mt-6 flex flex-wrap justify-center gap-3">

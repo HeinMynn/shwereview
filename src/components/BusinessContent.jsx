@@ -7,6 +7,7 @@ import ReviewForm from '@/components/ReviewForm';
 import ReportModal from '@/components/ReportModal';
 import Toast from '@/components/Toast';
 import { Pencil, Star, MapPin, Share2, Flag, Eye, EyeOff, ThumbsUp, ThumbsDown } from 'lucide-react';
+import VerifiedBadge from './VerifiedBadge';
 import Link from 'next/link';
 
 import Lightbox from '@/components/Lightbox';
@@ -220,13 +221,18 @@ export default function BusinessContent({ business, initialReviews }) {
                                                 </Link>
                                             ) : 'Anonymous'
                                         ) : (
-                                            isAdmin ? (
-                                                <Link href={`/admin/users/${review.user_id?._id}`} className="hover:underline text-blue-600">
-                                                    {review.user_id?.name || 'Unknown User'}
-                                                </Link>
-                                            ) : (
-                                                review.user_id?.name || 'Unknown User'
-                                            )
+                                            <div className="flex items-center gap-1">
+                                                {isAdmin ? (
+                                                    <Link href={`/admin/users/${review.user_id?._id}`} className="hover:underline text-blue-600">
+                                                        {review.user_id?.name || 'Unknown User'}
+                                                    </Link>
+                                                ) : (
+                                                    <span>{review.user_id?.name || 'Unknown User'}</span>
+                                                )}
+                                                {review.user_id?.phone_verified && (
+                                                    <VerifiedBadge />
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                     <div className="text-xs text-gray-600">

@@ -6,6 +6,7 @@ import { User, Review } from '@/lib/models';
 import { Card, Button } from '@/components/ui';
 import Link from 'next/link';
 import { ArrowLeft, Star } from 'lucide-react';
+import VerifiedBadge from '@/components/VerifiedBadge';
 
 import AdminUserControls from '@/components/AdminUserControls';
 
@@ -46,7 +47,12 @@ export default async function AdminUserDetail({ params }) {
                         <div className="space-y-2">
                             <div>
                                 <label className="text-sm text-gray-500">Name</label>
-                                <div className="font-bold text-lg">{user.name}</div>
+                                <div className="font-bold text-lg flex items-center gap-2">
+                                    {user.name}
+                                    {user.phone_verified && (
+                                        <VerifiedBadge />
+                                    )}
+                                </div>
                             </div>
                             <div>
                                 <label className="text-sm text-gray-500">Email</label>

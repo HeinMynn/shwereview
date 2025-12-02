@@ -7,6 +7,7 @@ import AdminReportList from './AdminReportList';
 import AdminHomepageEditor from './AdminHomepageEditor';
 import { Card } from '@/components/ui';
 import { Users, Building2, AlertTriangle, LayoutGrid, FileText, Shield } from 'lucide-react';
+import VerifiedBadge from './VerifiedBadge';
 
 export default function AdminDashboardClient({ initialUsers, initialBusinesses }) {
     const [activeTab, setActiveTab] = useState('overview');
@@ -114,7 +115,12 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                                                     {user.name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                                                    <div className="text-sm font-medium text-gray-900 flex items-center gap-1">
+                                                        {user.name}
+                                                        {user.phone_verified && (
+                                                            <VerifiedBadge className="w-4 h-4" />
+                                                        )}
+                                                    </div>
                                                     <div className="text-sm text-gray-600">{user.email}</div>
                                                 </div>
                                             </div>
