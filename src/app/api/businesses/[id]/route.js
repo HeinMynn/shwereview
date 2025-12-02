@@ -40,3 +40,55 @@ export async function GET(request, { params }) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export async function PUT(request, { params }) {
+    try {
+        await dbConnect();
+        const { id } = await params;
+
+        // Auth Check
+        const { getServerSession } = await import("next-auth/next");
+        const { authOptions } = await import("@/app/api/auth/[...nextauth]/route");
+        const session = await getServerSession(authOptions);
+
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const business = await Business.findById(id);
+        if (!business) {
+            return NextResponse.json({ error: 'Business not found' }, { status: 404 });
+        }
+
+        // Permission Check: Owner or Admin
+        const isOwner = business.owner_id?.toString() === session.user.id;
+        const isAdmin = session.user.role === 'Super Admin';
+
+        if (!isOwner && !isAdmin) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        const body = await request.json();
+
+        // Fields allowed to update
+        const allowedUpdates = ['name', 'description', 'address', 'category', 'images', 'geo_coordinates'];
+        const updates = {};
+
+        allowedUpdates.forEach(field => {
+            if (body[field] !== undefined) {
+                updates[field] = body[field];
+            }
+        });
+
+        // If updating critical info, maybe reset verification status? 
+        // For now, we'll keep it simple.
+
+        const updatedBusiness = await Business.findByIdAndUpdate(id, updates, { new: true });
+
+        return NextResponse.json({ success: true, business: updatedBusiness });
+
+    } catch (error) {
+        console.error('Error updating business:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}

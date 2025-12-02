@@ -212,8 +212,8 @@ export default function DashboardClient({ data }) {
                                                 <Link href={`/business/${business._id}`} className="flex-1 md:flex-none">
                                                     <Button variant="outline" className="w-full">View Page</Button>
                                                 </Link>
-                                                <Link href={`/business/${business._id}`} className="flex-1 md:flex-none">
-                                                    <Button className="w-full">Manage</Button>
+                                                <Link href={`/business/${business._id}/edit`} className="flex-1 md:flex-none">
+                                                    <Button className="w-full">Edit</Button>
                                                 </Link>
                                             </div>
                                         </Card>
