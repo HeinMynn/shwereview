@@ -125,7 +125,7 @@ const NotificationSchema = new mongoose.Schema({
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     type: {
         type: String,
-        enum: ['claim_approved', 'claim_rejected', 'claim_pending', 'other'],
+        enum: ['claim_approved', 'claim_rejected', 'claim_pending', 'report_result', 'review_removed', 'other'],
         required: true
     },
     title: { type: String, required: true },
