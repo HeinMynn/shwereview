@@ -76,25 +76,25 @@ export default function BusinessMap({ businesses }) {
                 >
                     <Popup>
                         <div className="min-w-[200px]">
-                            <h3 className="font-bold text-sm mb-1">{business.name}</h3>
-                            <p className="text-xs text-gray-600 mb-2 line-clamp-2">{business.address}</p>
+                            <h3 className="font-bold text-sm mb-1 text-slate-900">{business.name}</h3>
+                            <p className="text-xs text-slate-700 mb-2 line-clamp-2">{business.address}</p>
                             {business.description && (
-                                <p className="text-xs text-gray-500 mb-2 line-clamp-2 italic">
+                                <p className="text-xs text-slate-600 mb-2 line-clamp-2 italic">
                                     "{business.description}"
                                 </p>
                             )}
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs bg-gray-100 px-2 py-1 rounded capitalize">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded capitalize border border-slate-200">
                                     {business.category}
                                 </span>
-                                <div className="flex items-center gap-1 text-xs font-bold text-yellow-600">
+                                <div className="flex items-center gap-1 text-xs font-bold text-amber-600">
                                     <Star className="w-3 h-3 fill-current" />
                                     {business.aggregate_rating?.toFixed(1) || 'New'}
                                 </div>
                             </div>
                             <Link
                                 href={`/business/${business._id}`}
-                                className="block mt-2 text-center text-xs bg-indigo-600 text-white py-1 rounded hover:bg-indigo-700 transition-colors"
+                                className="block mt-3 text-center text-xs font-medium bg-slate-900 text-white py-2 rounded hover:bg-slate-800 transition-colors shadow-sm"
                             >
                                 View Details
                             </Link>
