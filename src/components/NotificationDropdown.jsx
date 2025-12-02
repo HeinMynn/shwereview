@@ -14,7 +14,7 @@ export default function NotificationDropdown() {
     const dropdownRef = useRef(null);
 
     const { data, error } = useSWR(
-        session ? '/api/notifications?unread_only=true' : null,
+        session ? '/api/notifications' : null,
         fetcher,
         {
             refreshInterval: 30000, // Poll every 30 seconds
@@ -78,7 +78,7 @@ export default function NotificationDropdown() {
             });
 
             if (res.ok) {
-                mutate('/api/notifications?unread_only=true');
+                mutate('/api/notifications');
                 // Optimistic update
                 setNotifications(prev =>
                     prev.map(n => n._id === notificationId ? { ...n, is_read: true } : n)
@@ -97,7 +97,7 @@ export default function NotificationDropdown() {
             });
 
             if (res.ok) {
-                mutate('/api/notifications?unread_only=true');
+                mutate('/api/notifications');
                 setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
                 setUnreadCount(0);
             }
