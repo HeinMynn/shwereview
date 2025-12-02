@@ -34,7 +34,7 @@ async function getBusinesses(searchParams) {
     const totalPages = Math.ceil(totalBusinesses / limit);
 
     let businessQuery = Business.find(query)
-        .select('name description address images category aggregate_rating status geo_coordinates')
+        .select('name description address images category aggregate_rating status geo_coordinates review_count')
         .skip(skip)
         .limit(limit);
 
@@ -153,6 +153,9 @@ export default async function SearchPage({ searchParams }) {
                                                     <Star className="w-3 h-3 text-yellow-400 fill-current" />
                                                     <span className="font-bold text-xs">
                                                         {business.aggregate_rating?.toFixed(1) || 'New'}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-500 ml-1">
+                                                        ({business.review_count || 0})
                                                     </span>
                                                 </div>
                                             </div>

@@ -67,6 +67,7 @@ const BusinessSchema = new mongoose.Schema({
     claim_email: { type: String }, // Email address used for claim verification
     claim_domain: { type: String }, // Domain used for DNS verification
     aggregate_rating: { type: Number, default: 0 },
+    review_count: { type: Number, default: 0 },
     micro_metrics_aggregates: { type: Map, of: Number, default: {} },
 }, { timestamps: true });
 

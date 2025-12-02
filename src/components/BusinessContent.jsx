@@ -6,15 +6,17 @@ import { Card, Button } from '@/components/ui';
 import ReviewForm from '@/components/ReviewForm';
 import ReportModal from '@/components/ReportModal';
 import Toast from '@/components/Toast';
-import { Pencil, Star, MapPin, Share2, Flag, Eye, EyeOff, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Pencil, Star, MapPin, Flag, Eye, EyeOff, ThumbsUp, ThumbsDown } from 'lucide-react';
 import VerifiedBadge from './VerifiedBadge';
 import Link from 'next/link';
+import ShareButton from '@/components/ShareButton';
 
 import Lightbox from '@/components/Lightbox';
 
-export default function BusinessContent({ business, initialReviews }) {
+export default function BusinessContent({ business, initialReviews, totalReviewCount }) {
     const { data: session } = useSession();
     const [reviews, setReviews] = useState(initialReviews);
+    const [reviewCount, setReviewCount] = useState(totalReviewCount || 0);
     const [isEditing, setIsEditing] = useState(false);
     const [reportingReviewId, setReportingReviewId] = useState(null);
     const [replyingReviewId, setReplyingReviewId] = useState(null);
@@ -37,7 +39,8 @@ export default function BusinessContent({ business, initialReviews }) {
     // Sync state with props
     useEffect(() => {
         setReviews(initialReviews);
-    }, [initialReviews]);
+        setReviewCount(totalReviewCount || 0);
+    }, [initialReviews, totalReviewCount]);
 
     // Fetch user votes
     useEffect(() => {
@@ -130,6 +133,7 @@ export default function BusinessContent({ business, initialReviews }) {
             setToast({ message: 'Review updated successfully', type: 'success' });
         } else {
             setReviews(prev => [newReview, ...prev]);
+            setReviewCount(prev => prev + 1);
             setToast({ message: 'Review submitted successfully', type: 'success' });
         }
     };
@@ -146,6 +150,14 @@ export default function BusinessContent({ business, initialReviews }) {
 
             const data = await res.json();
             setReviews(prev => prev.map(r => r._id === reviewId ? { ...r, is_hidden: data.review.is_hidden } : r));
+
+            // Update count based on new hidden status
+            if (data.review.is_hidden) {
+                setReviewCount(prev => Math.max(0, prev - 1));
+            } else {
+                setReviewCount(prev => prev + 1);
+            }
+
             setToast({ message: `Review ${data.review.is_hidden ? 'hidden' : 'visible'}`, type: 'success' });
         } catch (error) {
             console.error('Failed to toggle review visibility:', error);
@@ -186,7 +198,7 @@ export default function BusinessContent({ business, initialReviews }) {
             {/* Left Column: Reviews List */}
             <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white p-6 rounded-lg border border-slate-200">
-                    <h2 className="text-xl font-bold mb-4">About</h2>
+
                     <p className="text-gray-700 mb-6">{business.description}</p>
 
                     {/* Micro Metrics Display */}
@@ -204,7 +216,7 @@ export default function BusinessContent({ business, initialReviews }) {
                     </div>
                 </div>
 
-                <h2 className="text-2xl font-bold text-slate-900">Reviews ({visibleReviews.length})</h2>
+                <h2 className="text-2xl font-bold text-slate-900">Reviews ({reviewCount})</h2>
                 {visibleReviews.map((review) => (
                     <Card key={review._id} className={`p-6 ${(review.is_hidden || review.is_deleted) ? 'opacity-50 bg-gray-50 border-dashed' : ''}`}>
                         <div className="flex items-start justify-between mb-4">
@@ -403,9 +415,11 @@ export default function BusinessContent({ business, initialReviews }) {
                                 <MapPin className="w-5 h-5 text-slate-500 mt-1" />
                                 <p className="text-slate-700">{business.address}</p>
                             </div>
-                            <Button variant="outline" className="w-full">
-                                <Share2 className="w-4 h-4 mr-2" /> Share
-                            </Button>
+                            <ShareButton
+                                title={business.name}
+                                text={`Check out ${business.name} on ShweReview!`}
+                                className="w-full"
+                            />
                         </div>
                     </div>
 
@@ -435,6 +449,7 @@ export default function BusinessContent({ business, initialReviews }) {
                                             });
                                             if (res.ok) {
                                                 setReviews(prev => prev.filter(r => r._id !== userReview._id));
+                                                setReviewCount(prev => Math.max(0, prev - 1));
                                                 setToast({ message: 'Review deleted', type: 'success' });
                                             } else {
                                                 throw new Error('Failed to delete');

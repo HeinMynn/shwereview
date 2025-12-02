@@ -75,6 +75,9 @@ export async function POST(request) {
         // Update Business Aggregates (Reuse logic)
         await updateBusinessAggregates(businessId);
 
+        // Increment review count
+        await Business.findByIdAndUpdate(businessId, { $inc: { review_count: 1 } });
+
         // Fetch updated business
         const updatedBusiness = await Business.findById(businessId);
 
@@ -168,6 +171,9 @@ export async function DELETE(request) {
 
         // Update Business Aggregates
         await updateBusinessAggregates(review.business_id);
+
+        // Decrement review count
+        await Business.findByIdAndUpdate(review.business_id, { $inc: { review_count: -1 } });
 
         return NextResponse.json({ success: true });
     } catch (error) {

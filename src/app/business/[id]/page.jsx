@@ -5,8 +5,9 @@ import BusinessGallery from '@/components/BusinessGallery';
 
 import BusinessContent from '@/components/BusinessContent';
 import { Button, Card } from '@/components/ui';
-import { Star, MapPin, CheckCircle, Share2 } from 'lucide-react';
+import { Star, MapPin, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import ShareButton from '@/components/ShareButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,9 +37,12 @@ async function getBusiness(id) {
         .limit(20) // Limit initial reviews to improve performance
         .lean();
 
+    const totalReviewCount = await Review.countDocuments({ business_id: id, is_hidden: false, is_deleted: false });
+
     return {
         business: JSON.parse(JSON.stringify(business)),
-        reviews: JSON.parse(JSON.stringify(reviews))
+        reviews: JSON.parse(JSON.stringify(reviews)),
+        totalReviewCount
     };
 }
 
@@ -112,15 +116,17 @@ export default async function BusinessProfile({ params }) {
                                 <div className="flex items-center gap-1">
                                     <Star className="w-4 h-4 text-yellow-400 fill-current" />
                                     <span className="text-white font-bold">{business.aggregate_rating?.toFixed(1) || 'New'}</span>
-                                    <span>({reviews.length} reviews)</span>
+                                    <span>({data.totalReviewCount} reviews)</span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="flex gap-3">
-                            <Button className="bg-white text-slate-900 hover:bg-slate-100">
-                                <Share2 className="w-4 h-4 mr-2" /> Share
-                            </Button>
+                            <ShareButton
+                                title={business.name}
+                                text={`Check out ${business.name} on ShweReview!`}
+                                className="bg-white text-slate-900 hover:bg-slate-100"
+                            />
                             {isUnclaimed && !hasPendingClaim && (
                                 <Link href={`/business/${id}/claim`}>
                                     <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
@@ -146,7 +152,7 @@ export default async function BusinessProfile({ params }) {
             <BusinessGallery images={business.images} businessName={business.name} />
 
             {/* Content */}
-            <BusinessContent business={business} initialReviews={reviews} />
+            <BusinessContent business={business} initialReviews={reviews} totalReviewCount={data.totalReviewCount} />
         </main>
     );
 }

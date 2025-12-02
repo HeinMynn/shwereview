@@ -11,24 +11,6 @@ async function getBusinesses() {
     await dbConnect();
     const businesses = await Business.aggregate([
         { $match: { status: 'approved' } },
-        {
-            $lookup: {
-                from: 'reviews',
-                localField: '_id',
-                foreignField: 'business_id',
-                as: 'reviews'
-            }
-        },
-        {
-            $addFields: {
-                review_count: { $size: '$reviews' }
-            }
-        },
-        {
-            $project: {
-                reviews: 0 // Exclude the full reviews array to save bandwidth
-            }
-        },
         { $sort: { aggregate_rating: -1 } },
         { $limit: 12 }
     ]);
