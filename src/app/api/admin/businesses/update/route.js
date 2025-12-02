@@ -58,6 +58,7 @@ export async function POST(req) {
         if (updates.description) allowedUpdates.description = updates.description;
         if (updates.address) allowedUpdates.address = updates.address;
         if (updates.category) allowedUpdates.category = updates.category;
+        if (updates.geo_coordinates) allowedUpdates.geo_coordinates = updates.geo_coordinates;
 
         // Fix: Allow clearing images if explicit empty array is sent, or update if we have images
         if (updates.images && Array.isArray(updates.images)) {

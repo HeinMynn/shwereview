@@ -2,8 +2,9 @@ import dbConnect from '@/lib/mongodb';
 import { Business } from '@/lib/models';
 import { Card, Button, Input } from '@/components/ui';
 import Link from 'next/link';
-import { Star, MapPin, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, MapPin, Search, Filter, ChevronLeft, ChevronRight, Map as MapIcon, List } from 'lucide-react';
 import Image from 'next/image';
+import MapWrapper from '@/components/MapWrapper';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +33,7 @@ async function getBusinesses(searchParams) {
     const totalPages = Math.ceil(totalBusinesses / limit);
 
     let businessQuery = Business.find(query)
-        .select('name description address images category aggregate_rating status')
+        .select('name description address images category aggregate_rating status geo_coordinates')
         .skip(skip)
         .limit(limit);
 
@@ -61,6 +62,7 @@ export default async function SearchPage({ searchParams }) {
     const query = params.q || '';
     const category = params.category || 'all';
     const rating = params.rating || '';
+    const showMap = params.map === 'true';
 
     // Helper to generate pagination links
     const createPageLink = (newPage) => {
@@ -68,43 +70,74 @@ export default async function SearchPage({ searchParams }) {
         if (query) newParams.set('q', query);
         if (category && category !== 'all') newParams.set('category', category);
         if (rating) newParams.set('rating', rating);
+        if (showMap) newParams.set('map', 'true');
         newParams.set('page', newPage.toString());
         return `/search?${newParams.toString()}`;
     };
 
+    // Helper to toggle map view
+    const toggleMapLink = () => {
+        const newParams = new URLSearchParams();
+        if (query) newParams.set('q', query);
+        if (category && category !== 'all') newParams.set('category', category);
+        if (rating) newParams.set('rating', rating);
+        newParams.set('page', page.toString());
+
+        if (showMap) {
+            newParams.delete('map');
+        } else {
+            newParams.set('map', 'true');
+        }
+        return `/search?${newParams.toString()}`;
+    };
+
     return (
-        <main className="min-h-screen bg-slate-50 pb-12">
+        <main className="min-h-screen bg-slate-50 pb-12 flex flex-col">
             {/* Search Header */}
             <div className="bg-white border-b border-slate-200 sticky top-16 z-40 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
                     <form className="flex gap-2">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
                             <Input
                                 name="q"
                                 defaultValue={query}
-                                placeholder="Search businesses, services, or places..."
-                                className="pl-10 w-full text-slate-900"
+                                placeholder="Search..."
+                                className="pl-9 sm:pl-10 w-full text-slate-900 h-9 sm:h-10 text-sm"
                             />
+                            {/* Preserve other params */}
+                            {category && category !== 'all' && <input type="hidden" name="category" value={category} />}
+                            {rating && <input type="hidden" name="rating" value={rating} />}
+                            {showMap && <input type="hidden" name="map" value="true" />}
                         </div>
-                        <Button type="submit">Search</Button>
+                        <Button type="submit" size="sm" className="h-9 sm:h-10 px-3 sm:px-4">Search</Button>
                     </form>
 
-                    {/* Filters */}
-                    <div className="flex flex-wrap items-center gap-2 mt-4 overflow-x-auto pb-2">
-                        <div className="flex items-center text-sm font-medium text-gray-700 mr-2">
+                    {/* Filters & Map Toggle - Scrollable Row on Mobile */}
+                    <div className="flex items-center gap-2 mt-2 sm:mt-4 overflow-x-auto pb-1 sm:pb-2 no-scrollbar">
+                        {/* Map Toggle - Fixed at start */}
+                        <Link href={toggleMapLink()} className="flex-shrink-0 mr-2">
+                            <Button variant={showMap ? "default" : "outline"} size="sm" className="h-8 text-xs whitespace-nowrap">
+                                {showMap ? <List className="w-3 h-3 mr-1" /> : <MapIcon className="w-3 h-3 mr-1" />}
+                                {showMap ? 'List' : 'Map'}
+                            </Button>
+                        </Link>
+
+                        <div className="h-6 w-px bg-gray-200 flex-shrink-0 hidden sm:block"></div>
+
+                        <div className="flex items-center text-sm font-medium text-gray-700 mr-1 flex-shrink-0 hidden sm:flex">
                             <Filter className="w-4 h-4 mr-1" /> Filters:
                         </div>
 
                         {/* Category Filter */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-shrink-0">
                             {['all', 'restaurant', 'shop', 'logistics', 'education'].map((cat) => (
                                 <Link
                                     key={cat}
-                                    href={`/search?q=${query}&category=${cat}&rating=${rating}`}
+                                    href={`/search?q=${query}&category=${cat}&rating=${rating}${showMap ? '&map=true' : ''}`}
                                 >
                                     <span className={`
-                                        px-3 py-1 rounded-full text-sm font-medium capitalize transition-colors
+                                        px-3 py-1 rounded-full text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap block
                                         ${category === cat
                                             ? 'bg-indigo-600 text-white'
                                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
@@ -115,17 +148,17 @@ export default async function SearchPage({ searchParams }) {
                             ))}
                         </div>
 
-                        <div className="w-px h-6 bg-gray-300 mx-2 hidden sm:block"></div>
+                        <div className="w-px h-6 bg-gray-300 mx-1 flex-shrink-0"></div>
 
                         {/* Rating Filter */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-shrink-0">
                             {[4, 3].map((r) => (
                                 <Link
                                     key={r}
-                                    href={`/search?q=${query}&category=${category}&rating=${rating === r.toString() ? '' : r}`}
+                                    href={`/search?q=${query}&category=${category}&rating=${rating === r.toString() ? '' : r}${showMap ? '&map=true' : ''}`}
                                 >
                                     <span className={`
-                                        px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 transition-colors
+                                        px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1 transition-colors whitespace-nowrap
                                         ${rating === r.toString()
                                             ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
                                             : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}
@@ -139,8 +172,8 @@ export default async function SearchPage({ searchParams }) {
                 </div>
             </div>
 
-            {/* Results */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Results Content */}
+            <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
                 <div className="mb-6 flex justify-between items-end">
                     <h1 className="text-2xl font-bold text-slate-900">
                         {totalBusinesses} result{totalBusinesses !== 1 ? 's' : ''} found
@@ -152,65 +185,69 @@ export default async function SearchPage({ searchParams }) {
                     )}
                 </div>
 
-                {businesses.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-lg border border-slate-200">
-                        <div className="text-4xl mb-4">🔍</div>
-                        <h3 className="text-lg font-medium text-gray-900">No businesses found</h3>
-                        <p className="text-gray-500 mt-2">Try adjusting your search or filters</p>
-                        <Link href="/search">
-                            <Button variant="outline" className="mt-4">Clear all filters</Button>
-                        </Link>
-                    </div>
-                ) : (
-                    <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {businesses.map((business) => (
-                                <Link key={business._id} href={`/business/${business._id}`}>
-                                    <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
-                                        <div className="h-48 bg-gray-200 relative">
-                                            {business.images?.[0] ? (
-                                                <Image
-                                                    src={business.images[0]}
-                                                    alt={business.name}
-                                                    fill
-                                                    className="object-cover"
-                                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl font-bold bg-gray-100">
-                                                    {business.name.charAt(0)}
-                                                </div>
-                                            )}
-                                            <div className="absolute top-3 right-3 bg-white px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                                                <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                                                <span className="font-bold text-xs">
-                                                    {business.aggregate_rating?.toFixed(1) || 'New'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="p-4 flex-1 flex flex-col">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h3 className="font-bold text-lg text-gray-900 line-clamp-1">{business.name}</h3>
-                                                <span className="text-xs font-medium px-2 py-1 bg-slate-100 rounded-full capitalize text-slate-600">
-                                                    {business.category}
-                                                </span>
-                                            </div>
-                                            <p className="text-sm text-gray-500 mb-4 line-clamp-2 flex-1">
-                                                {business.description}
-                                            </p>
-                                            <div className="flex items-center text-xs text-gray-500 mt-auto pt-4 border-t border-gray-100">
-                                                <MapPin className="w-3 h-3 mr-1" />
-                                                <span className="line-clamp-1">{business.address}</span>
-                                            </div>
-                                        </div>
-                                    </Card>
+                <div className={`grid gap-6 ${showMap ? 'lg:grid-cols-3 lg:h-[calc(100vh-250px)]' : 'grid-cols-1'}`}>
+
+                    {/* List View */}
+                    <div className={`${showMap ? 'lg:col-span-2 overflow-y-auto pr-2' : ''}`}>
+                        {businesses.length === 0 ? (
+                            <div className="text-center py-20 bg-white rounded-lg border border-slate-200">
+                                <div className="text-4xl mb-4">🔍</div>
+                                <h3 className="text-lg font-medium text-gray-900">No businesses found</h3>
+                                <p className="text-gray-500 mt-2">Try adjusting your search or filters</p>
+                                <Link href="/search">
+                                    <Button variant="outline" className="mt-4">Clear all filters</Button>
                                 </Link>
-                            ))}
-                        </div>
+                            </div>
+                        ) : (
+                            <div className={`grid grid-cols-1 ${showMap ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'} gap-6`}>
+                                {businesses.map((business) => (
+                                    <Link key={business._id} href={`/business/${business._id}`}>
+                                        <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
+                                            <div className="h-48 bg-gray-200 relative">
+                                                {business.images?.[0] ? (
+                                                    <Image
+                                                        src={business.images[0]}
+                                                        alt={business.name}
+                                                        fill
+                                                        className="object-cover"
+                                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl font-bold bg-gray-100">
+                                                        {business.name.charAt(0)}
+                                                    </div>
+                                                )}
+                                                <div className="absolute top-3 right-3 bg-white px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                                                    <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                                                    <span className="font-bold text-xs">
+                                                        {business.aggregate_rating?.toFixed(1) || 'New'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="p-4 flex-1 flex flex-col">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <h3 className="font-bold text-lg text-gray-900 line-clamp-1">{business.name}</h3>
+                                                    <span className="text-xs font-medium px-2 py-1 bg-slate-100 rounded-full capitalize text-slate-600">
+                                                        {business.category}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-gray-500 mb-4 line-clamp-2 flex-1">
+                                                    {business.description}
+                                                </p>
+                                                <div className="flex items-center text-xs text-gray-500 mt-auto pt-4 border-t border-gray-100">
+                                                    <MapPin className="w-3 h-3 mr-1" />
+                                                    <span className="line-clamp-1">{business.address}</span>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Pagination Controls */}
                         {totalPages > 1 && (
-                            <div className="mt-12 flex justify-center items-center gap-2">
+                            <div className="mt-12 flex justify-center items-center gap-2 pb-8">
                                 <Link href={currentPage > 1 ? createPageLink(currentPage - 1) : '#'}>
                                     <Button
                                         variant="outline"
@@ -223,7 +260,6 @@ export default async function SearchPage({ searchParams }) {
 
                                 <div className="flex items-center gap-1 mx-2">
                                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
-                                        // Show first, last, current, and neighbors
                                         if (
                                             p === 1 ||
                                             p === totalPages ||
@@ -261,8 +297,22 @@ export default async function SearchPage({ searchParams }) {
                                 </Link>
                             </div>
                         )}
-                    </>
-                )}
+                    </div>
+
+                    {/* Map View */}
+                    {showMap && (
+                        <div className="hidden lg:block lg:col-span-1 sticky top-36 h-full">
+                            <MapWrapper businesses={businesses} />
+                        </div>
+                    )}
+
+                    {/* Mobile Map View (Full Screen Overlay or similar, but for now just stacking) */}
+                    {showMap && (
+                        <div className="lg:hidden h-[300px] w-full mb-6 order-first rounded-lg overflow-hidden shadow-sm">
+                            <MapWrapper businesses={businesses} />
+                        </div>
+                    )}
+                </div>
             </div>
         </main>
     );

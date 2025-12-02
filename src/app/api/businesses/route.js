@@ -61,6 +61,7 @@ export async function POST(request) {
             claim_status: 'unclaimed',
             is_verified: false,
             images: processedImages,
+            geo_coordinates: body.geo_coordinates,
         });
 
         return NextResponse.json({ success: true, business });

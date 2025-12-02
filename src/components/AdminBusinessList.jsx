@@ -7,6 +7,12 @@ import { CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
 import Toast from './Toast';
+import dynamic from 'next/dynamic';
+
+const LocationPicker = dynamic(() => import('./LocationPicker'), {
+    ssr: false,
+    loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center text-gray-400">Loading Map...</div>
+});
 
 const fetcher = (...args) => fetch(...args).then(res => res.json());
 
@@ -102,7 +108,8 @@ export default function AdminBusinessList({ initialBusinesses }) {
             description: business.description || '',
             address: business.address || '',
             category: business.category || 'restaurant',
-            images: business.images || []
+            images: business.images || [],
+            geo_coordinates: business.geo_coordinates || { lat: '', lng: '' }
         });
         setImageUploads([]);
     };
@@ -214,12 +221,80 @@ export default function AdminBusinessList({ initialBusinesses }) {
 
                             <div>
                                 <label className="block text-sm font-medium mb-1 text-gray-700">Address</label>
-                                <input
-                                    type="text"
-                                    value={editForm.address}
-                                    onChange={e => setEditForm({ ...editForm, address: e.target.value })}
-                                    className="w-full p-2 border border-gray-300 rounded bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={editForm.address}
+                                        onChange={e => setEditForm({ ...editForm, address: e.target.value })}
+                                        className="flex-1 p-2 border border-gray-300 rounded bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={async () => {
+                                            if (!editForm.address) return;
+                                            setToast({ message: 'Fetching coordinates...', type: 'info' });
+                                            try {
+                                                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(editForm.address)}`);
+                                                const data = await res.json();
+                                                if (data && data.length > 0) {
+                                                    const { lat, lon } = data[0];
+                                                    setEditForm(prev => ({
+                                                        ...prev,
+                                                        geo_coordinates: { lat: parseFloat(lat), lng: parseFloat(lon) }
+                                                    }));
+                                                    setToast({ message: 'Coordinates updated!', type: 'success' });
+                                                } else {
+                                                    setToast({ message: 'Address not found', type: 'error' });
+                                                }
+                                            } catch (err) {
+                                                console.error(err);
+                                                setToast({ message: 'Geocoding failed', type: 'error' });
+                                            }
+                                        }}
+                                    >
+                                        📍 Get Coords
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Location Picker */}
+                            <div>
+                                <label className="block text-sm font-medium mb-2 text-gray-700">Location</label>
+                                <LocationPicker
+                                    position={editForm.geo_coordinates}
+                                    onLocationSelect={(coords) => setEditForm({ ...editForm, geo_coordinates: coords })}
                                 />
+                                <div className="grid grid-cols-2 gap-4 mt-2">
+                                    <div>
+                                        <label className="block text-xs text-gray-500 mb-1">Latitude</label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            value={editForm.geo_coordinates?.lat || ''}
+                                            onChange={e => setEditForm({
+                                                ...editForm,
+                                                geo_coordinates: { ...editForm.geo_coordinates, lat: parseFloat(e.target.value) }
+                                            })}
+                                            className="w-full p-2 border border-gray-300 rounded bg-gray-50 text-gray-900 text-sm"
+                                            placeholder="Latitude"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-gray-500 mb-1">Longitude</label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            value={editForm.geo_coordinates?.lng || ''}
+                                            onChange={e => setEditForm({
+                                                ...editForm,
+                                                geo_coordinates: { ...editForm.geo_coordinates, lng: parseFloat(e.target.value) }
+                                            })}
+                                            className="w-full p-2 border border-gray-300 rounded bg-gray-50 text-gray-900 text-sm"
+                                            placeholder="Longitude"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             <div>

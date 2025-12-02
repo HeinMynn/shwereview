@@ -267,13 +267,48 @@ export default function NewBusinessPage() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                <Input
-                                    name="address"
-                                    value={formData.address}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="e.g., 123 Main St"
-                                />
+                                <div className="flex gap-2">
+                                    <Input
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="e.g., 123 Main St, Yangon"
+                                        className="flex-1"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={async () => {
+                                            if (!formData.address) return;
+                                            try {
+                                                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(formData.address)}`);
+                                                const data = await res.json();
+                                                if (data && data.length > 0) {
+                                                    const { lat, lon } = data[0];
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        geo_coordinates: { lat: parseFloat(lat), lng: parseFloat(lon) }
+                                                    }));
+                                                    setSuccess('Location found! Coordinates added.');
+                                                    setTimeout(() => setSuccess(''), 3000);
+                                                } else {
+                                                    setErrors(prev => ({ ...prev, submit: 'Address not found on map' }));
+                                                }
+                                            } catch (err) {
+                                                console.error(err);
+                                                setErrors(prev => ({ ...prev, submit: 'Failed to fetch coordinates' }));
+                                            }
+                                        }}
+                                    >
+                                        📍 Locate
+                                    </Button>
+                                </div>
+                                {formData.geo_coordinates && (
+                                    <p className="text-xs text-green-600 mt-1">
+                                        ✓ Coordinates set: {formData.geo_coordinates.lat.toFixed(4)}, {formData.geo_coordinates.lng.toFixed(4)}
+                                    </p>
+                                )}
                             </div>
 
                             <div>
