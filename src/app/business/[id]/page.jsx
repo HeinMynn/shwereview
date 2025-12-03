@@ -8,6 +8,7 @@ import { Button, Card } from '@/components/ui';
 import { Star, MapPin, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import VerifiedBadge from '@/components/VerifiedBadge';
+import ShareButton from '@/components/ShareButton';
 
 
 export const dynamic = 'force-dynamic';
