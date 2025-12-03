@@ -76,6 +76,23 @@ export default async function BusinessProfile({ params }) {
                     </div>
                 </div>
             )}
+
+            {/* Owner Upgrade Banner */}
+            {isSubmitter && business.subscription_tier !== 'pro' && (
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-center py-3 px-4 font-bold sticky top-16 z-20 shadow-md">
+                    <div className="flex items-center justify-center gap-4 flex-wrap">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl">🚀</span>
+                            <span>Unlock premium features like custom buttons, verified badge, and analytics!</span>
+                        </div>
+                        <Link href={`/checkout?plan=pro&businessId=${business._id}`}>
+                            <Button size="sm" variant="secondary" className="bg-white text-indigo-600 hover:bg-slate-100 border-0">
+                                Upgrade to Pro
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+            )}
             {/* Hero Section */}
             <div className="relative h-[300px] md:h-[400px] bg-slate-900">
                 <img
