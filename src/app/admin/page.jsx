@@ -3,7 +3,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import AdminDashboardClient from '@/components/AdminDashboardClient';
 import dbConnect from '@/lib/mongodb';
-import { User, Business } from '@/lib/models';
+import { User, Business, BusinessClaim } from '@/lib/models';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,18 +20,26 @@ export default async function AdminPage() {
     const users = await User.find({}).sort({ createdAt: -1 }).lean();
     const businesses = await Business.find({})
         .populate('owner_id', 'name email')
-        .populate('claimant_id', 'name email') // Add claimant details
+        .sort({ createdAt: -1 })
+        .lean();
+
+    // Fetch pending claims
+    const claims = await BusinessClaim.find({ status: 'pending' })
+        .populate('business_id', 'name')
+        .populate('claimant_id', 'name email')
         .sort({ createdAt: -1 })
         .lean();
 
     // Serialize data to pass to client component
     const serializedUsers = JSON.parse(JSON.stringify(users));
     const serializedBusinesses = JSON.parse(JSON.stringify(businesses));
+    const serializedClaims = JSON.parse(JSON.stringify(claims));
 
     return (
         <AdminDashboardClient
             initialUsers={serializedUsers}
             initialBusinesses={serializedBusinesses}
+            initialClaims={serializedClaims}
         />
     );
 }

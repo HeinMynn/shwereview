@@ -16,20 +16,22 @@ const LocationPicker = dynamic(() => import('./LocationPicker'), {
 
 const fetcher = (...args) => fetch(...args).then(res => res.json());
 
-export default function AdminBusinessList({ initialBusinesses }) {
+export default function AdminBusinessList({ initialBusinesses, initialClaims }) {
     // Use SWR for real-time updates
     const { data, error } = useSWR('/api/admin/businesses', fetcher, {
-        fallbackData: { businesses: initialBusinesses },
+        fallbackData: { businesses: initialBusinesses, claims: initialClaims },
         refreshInterval: 15000, // Poll every 15 seconds
         revalidateOnFocus: true,
     });
 
     const businesses = data?.businesses || [];
+    const claims = data?.claims || [];
     const [loadingId, setLoadingId] = useState(null);
     const [toast, setToast] = useState(null);
     const [geoStatus, setGeoStatus] = useState(null);
 
     const updateStatus = async (businessId, newStatus) => {
+        // ... (existing updateStatus logic)
         console.log('Updating status for:', businessId, 'to', newStatus);
         setLoadingId(businessId);
         try {
@@ -57,6 +59,7 @@ export default function AdminBusinessList({ initialBusinesses }) {
     };
 
     const toggleVerification = async (businessId, currentStatus) => {
+        // ... (existing toggleVerification logic)
         setLoadingId(businessId);
         try {
             const res = await fetch('/api/admin/verify', {
@@ -77,13 +80,13 @@ export default function AdminBusinessList({ initialBusinesses }) {
         }
     };
 
-    const handleClaim = async (businessId, action) => {
-        setLoadingId(businessId);
+    const handleClaim = async (claimId, action) => {
+        setLoadingId(claimId);
         try {
             const res = await fetch('/api/admin/claim-status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ businessId, action }),
+                body: JSON.stringify({ claimId, action }),
             });
 
             if (!res.ok) throw new Error('Failed to update claim');
@@ -390,63 +393,63 @@ export default function AdminBusinessList({ initialBusinesses }) {
             )}
 
             {/* Pending Claims Section */}
-            {businesses.some(b => b.claim_status === 'pending') && (
+            {claims.length > 0 && (
                 <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
                     <h3 className="font-bold text-orange-800 mb-4">Pending Claims</h3>
                     <div className="space-y-3">
-                        {businesses.filter(b => b.claim_status === 'pending').map(business => (
-                            <div key={business._id} className="bg-white p-3 rounded border border-orange-100 shadow-sm">
+                        {claims.map(claim => (
+                            <div key={claim._id} className="bg-white p-3 rounded border border-orange-100 shadow-sm">
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                        <div className="font-bold text-gray-900">{business.name}</div>
+                                        <div className="font-bold text-gray-900">{claim.business_id?.name || 'Unknown Business'}</div>
 
                                         {/* Claimant Info */}
                                         <div className="text-sm text-gray-700 mt-1">
                                             <span className="font-semibold">Claimant:</span>{' '}
-                                            {business.claimant_id?.name || 'Unknown'}{' '}
-                                            <span className="text-gray-600">({business.claimant_id?.email || 'N/A'})</span>
+                                            {claim.claimant_id?.name || 'Unknown'}{' '}
+                                            <span className="text-gray-600">({claim.claimant_id?.email || 'N/A'})</span>
                                         </div>
 
                                         <div className="mt-1 text-xs">
                                             <span className="font-bold text-gray-700">Method: </span>
-                                            <span className="uppercase bg-gray-200 px-2 py-0.5 rounded text-gray-900 font-medium">{business.claim_verification_method || 'Document'}</span>
+                                            <span className="uppercase bg-gray-200 px-2 py-0.5 rounded text-gray-900 font-medium">{claim.verification_method || 'Document'}</span>
                                         </div>
 
-                                        {business.claim_verification_method === 'document' && business.claim_proof && (
-                                            <a href={business.claim_proof} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline block mt-1">
+                                        {claim.verification_method === 'document' && claim.proof && (
+                                            <a href={claim.proof} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline block mt-1">
                                                 View Proof Document
                                             </a>
                                         )}
 
-                                        {business.claim_verification_method === 'dns' && (
+                                        {claim.verification_method === 'dns' && (
                                             <div className="text-xs mt-1 space-y-1">
                                                 <div className="mb-1">
                                                     <span className="font-semibold text-gray-700">Domain:</span>{' '}
                                                     <span className="bg-blue-50 px-2 py-0.5 rounded text-gray-900 font-medium">
-                                                        {business.claim_domain || 'Not provided'}
+                                                        {claim.domain || 'Not provided'}
                                                     </span>
                                                 </div>
                                                 <div className="text-gray-700">
                                                     <span className="font-semibold">Token:</span>{' '}
-                                                    <code className="bg-gray-100 px-1 text-gray-900">{business.claim_verification_data?.substring(0, 20)}...</code>
+                                                    <code className="bg-gray-100 px-1 text-gray-900">{claim.verification_data?.substring(0, 20)}...</code>
                                                 </div>
                                                 <div>
                                                     <span className="font-semibold text-gray-700">Status:</span>{' '}
-                                                    <span className={`font-bold ${business.claim_verification_status === 'verified' ? 'text-green-600' : 'text-red-600'}`}>
-                                                        {business.claim_verification_status}
+                                                    <span className={`font-bold ${claim.verification_status === 'verified' ? 'text-green-600' : 'text-red-600'}`}>
+                                                        {claim.verification_status}
                                                     </span>
                                                 </div>
                                             </div>
                                         )}
 
-                                        {business.claim_verification_method === 'email' && (
+                                        {claim.verification_method === 'email' && (
                                             <div className="text-xs text-gray-700 mt-1">
                                                 <div className="mb-1">
                                                     <span className="font-semibold">Verification Email:</span>{' '}
-                                                    <span className="bg-blue-50 px-2 py-0.5 rounded text-gray-900 font-medium">{business.claim_email || business.claim_verification_data?.split('|')[0]}</span>
+                                                    <span className="bg-blue-50 px-2 py-0.5 rounded text-gray-900 font-medium">{claim.email || claim.verification_data?.split('|')[0]}</span>
                                                 </div>
-                                                <span className={`font-bold ${business.claim_verification_status === 'verified' ? 'text-green-600' : 'text-red-600'}`}>
-                                                    {business.claim_verification_status}
+                                                <span className={`font-bold ${claim.verification_status === 'verified' ? 'text-green-600' : 'text-red-600'}`}>
+                                                    {claim.verification_status}
                                                 </span>
                                             </div>
                                         )}
@@ -455,16 +458,16 @@ export default function AdminBusinessList({ initialBusinesses }) {
                                         <Button
                                             size="sm"
                                             className="bg-green-600 hover:bg-green-700 text-white h-8"
-                                            onClick={() => handleClaim(business._id, 'approve')}
-                                            disabled={loadingId === business._id}
+                                            onClick={() => handleClaim(claim._id, 'approve')}
+                                            disabled={loadingId === claim._id}
                                         >
                                             Approve
                                         </Button>
                                         <Button
                                             size="sm"
                                             className="bg-red-600 hover:bg-red-700 text-white h-8"
-                                            onClick={() => handleClaim(business._id, 'reject')}
-                                            disabled={loadingId === business._id}
+                                            onClick={() => handleClaim(claim._id, 'reject')}
+                                            disabled={loadingId === claim._id}
                                         >
                                             Reject
                                         </Button>

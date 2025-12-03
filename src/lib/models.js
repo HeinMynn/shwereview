@@ -49,29 +49,41 @@ const BusinessSchema = new mongoose.Schema({
     },
     claim_status: {
         type: String,
-        enum: ['unclaimed', 'pending', 'approved', 'rejected'],
+        enum: ['unclaimed', 'pending', 'approved'],
         default: 'unclaimed',
     },
-    claimant_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    claim_proof: { type: String }, // URL or text proof
-    claim_verification_method: {
-        type: String,
-        enum: ['document', 'dns', 'email'],
-        default: 'document'
-    },
-    claim_verification_data: { type: String }, // DNS TXT record or Email address
-    claim_last_sent_at: { type: Date }, // For rate limiting claim emails
-    claim_verification_status: {
-        type: String,
-        enum: ['pending', 'verified', 'failed'],
-        default: 'pending'
-    },
-    claim_email: { type: String }, // Email address used for claim verification
-    claim_domain: { type: String }, // Domain used for DNS verification
     aggregate_rating: { type: Number, default: 0 },
     review_count: { type: Number, default: 0 },
     micro_metrics_aggregates: { type: Map, of: Number, default: {} },
 }, { timestamps: true });
+
+const BusinessClaimSchema = new mongoose.Schema({
+    business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', required: true },
+    claimant_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    status: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending'
+    },
+    verification_method: {
+        type: String,
+        enum: ['document', 'dns', 'email'],
+        required: true
+    },
+    verification_data: { type: String }, // Token, Code, etc.
+    proof: { type: String }, // URL or text proof
+    email: { type: String }, // Email address used for claim verification
+    domain: { type: String }, // Domain used for DNS verification
+    verification_status: {
+        type: String,
+        enum: ['pending', 'verified', 'failed'],
+        default: 'pending'
+    },
+    last_sent_at: { type: Date }, // For rate limiting
+}, { timestamps: true });
+
+// Ensure one pending claim per user per business
+BusinessClaimSchema.index({ business_id: 1, claimant_id: 1, status: 1 });
 
 const ReviewSchema = new mongoose.Schema({
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -205,6 +217,6 @@ const ReviewVote = mongoose.models.ReviewVote || mongoose.model('ReviewVote', Re
 const Report = mongoose.models.Report || mongoose.model('Report', ReportSchema);
 const Notification = mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
 const HomepageConfig = mongoose.models.HomepageConfig || mongoose.model('HomepageConfig', HomepageConfigSchema);
-const TelegramVerification = mongoose.models.TelegramVerification || mongoose.model('TelegramVerification', TelegramVerificationSchema);
+const BusinessClaim = mongoose.models.BusinessClaim || mongoose.model('BusinessClaim', BusinessClaimSchema);
 
-export { User, Business, Review, ReviewVote, Report, Notification, HomepageConfig, TelegramVerification };
+export { User, Business, Review, ReviewVote, Report, Notification, HomepageConfig, TelegramVerification, BusinessClaim };

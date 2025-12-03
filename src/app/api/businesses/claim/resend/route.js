@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import dbConnect from '@/lib/mongodb';
-import { Business } from '@/lib/models';
+import { Business, BusinessClaim } from '@/lib/models';
 import { sendVerificationEmail } from '@/lib/email';
 
 import crypto from 'crypto';
@@ -28,18 +28,24 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Business not found' }, { status: 404 });
         }
 
-        // Verify that the claim is actually pending and the email matches
-        if (business.claim_status !== 'pending' || business.claimant_id?.toString() !== session.user.id) {
+        // Find the specific claim for this user
+        const claim = await BusinessClaim.findOne({
+            business_id: businessId,
+            claimant_id: session.user.id,
+            status: 'pending'
+        });
+
+        if (!claim) {
             return NextResponse.json({ error: 'No pending claim found for this user' }, { status: 400 });
         }
 
-        if (business.claim_email !== email) {
+        if (claim.email !== email) {
             return NextResponse.json({ error: 'Email does not match the initial claim request' }, { status: 400 });
         }
 
         // Rate Limiting Check
-        if (business.claim_last_sent_at) {
-            const timeSinceLastSent = Date.now() - new Date(business.claim_last_sent_at).getTime();
+        if (claim.last_sent_at) {
+            const timeSinceLastSent = Date.now() - new Date(claim.last_sent_at).getTime();
             if (timeSinceLastSent < 3 * 60 * 1000) { // 3 minutes
                 const remainingSeconds = Math.ceil((3 * 60 * 1000 - timeSinceLastSent) / 1000);
                 return NextResponse.json({ error: `Please wait ${remainingSeconds} seconds before requesting a new code.` }, { status: 429 });
@@ -58,9 +64,9 @@ export async function POST(request) {
         }
 
         // Update verification data
-        business.claim_verification_data = `${email}|${code}`;
-        business.claim_last_sent_at = new Date();
-        await business.save();
+        claim.verification_data = `${email}|${code}`;
+        claim.last_sent_at = new Date();
+        await claim.save();
 
         return NextResponse.json({ success: true, message: 'Verification code resent' });
     } catch (error) {

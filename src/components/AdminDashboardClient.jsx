@@ -10,7 +10,7 @@ import { Card } from '@/components/ui';
 import { Users, Building2, AlertTriangle, LayoutGrid, FileText, Shield, Bell } from 'lucide-react';
 import VerifiedBadge from './VerifiedBadge';
 
-export default function AdminDashboardClient({ initialUsers, initialBusinesses }) {
+export default function AdminDashboardClient({ initialUsers, initialBusinesses, initialClaims }) {
     const [activeTab, setActiveTab] = useState('overview');
     const [users] = useState(initialUsers);
 
@@ -18,6 +18,7 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
     const totalUsers = users.length;
     const totalBusinesses = initialBusinesses.length;
     const pendingBusinesses = initialBusinesses.filter(b => b.status === 'pending').length;
+    const pendingClaims = initialClaims ? initialClaims.length : 0;
     const suspendedUsers = users.filter(u => u.account_status === 'suspended').length;
 
     const TabButton = ({ id, label, icon: Icon }) => (
@@ -82,19 +83,19 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses }
                             </div>
                         </Card>
                         <Card className="p-6 flex items-center gap-4">
-                            <div className="p-3 bg-red-100 text-red-600 rounded-full">
-                                <Shield className="w-6 h-6" />
+                            <div className="p-3 bg-orange-100 text-orange-600 rounded-full">
+                                <FileText className="w-6 h-6" />
                             </div>
                             <div>
-                                <div className="text-sm font-medium text-slate-700">Suspended Users</div>
-                                <div className="text-2xl font-bold">{suspendedUsers}</div>
+                                <div className="text-sm font-medium text-slate-700">Pending Claims</div>
+                                <div className="text-2xl font-bold">{pendingClaims}</div>
                             </div>
                         </Card>
                     </div>
                 )}
 
                 {activeTab === 'businesses' && (
-                    <AdminBusinessList initialBusinesses={initialBusinesses} />
+                    <AdminBusinessList initialBusinesses={initialBusinesses} initialClaims={initialClaims} />
                 )}
 
                 {activeTab === 'users' && (

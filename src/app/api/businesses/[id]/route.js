@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
-import { Business, Review } from '@/lib/models';
+import { Business, Review, BusinessClaim } from '@/lib/models';
 
 export async function GET(request, { params }) {
     try {
@@ -13,15 +13,13 @@ export async function GET(request, { params }) {
             return NextResponse.json({ error: 'Business not found' }, { status: 404 });
         }
 
+        // Auth Check for visibility and claim status
+        const { getServerSession } = await import("next-auth/next");
+        const { authOptions } = await import("@/app/api/auth/[...nextauth]/route");
+        const session = await getServerSession(authOptions);
+
         // Check visibility
         if (business.status !== 'approved') {
-            // We need to check session for ownership, but this is an API route
-            // For simplicity in this context, we might just hide it or require auth
-            // Let's use getServerSession to be secure
-            const { getServerSession } = await import("next-auth/next");
-            const { authOptions } = await import("@/app/api/auth/[...nextauth]/route");
-            const session = await getServerSession(authOptions);
-
             const isOwner = session?.user?.id === business.submitted_by?.toString() || session?.user?.id === business.owner_id?._id?.toString();
             const isAdmin = session?.user?.role === 'Super Admin';
 
@@ -34,7 +32,16 @@ export async function GET(request, { params }) {
             .populate('user_id', 'name avatar badges phone_verified')
             .sort({ createdAt: -1 });
 
-        return NextResponse.json({ business, reviews });
+        let userClaim = null;
+        if (session) {
+            userClaim = await BusinessClaim.findOne({
+                business_id: id,
+                claimant_id: session.user.id,
+                status: 'pending' // We primarily care about pending claims for the claim page
+            });
+        }
+
+        return NextResponse.json({ business, reviews, userClaim });
     } catch (error) {
         console.error('Error fetching business:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

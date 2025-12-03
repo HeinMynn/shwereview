@@ -30,6 +30,49 @@ export default function ClaimBusinessPage({ params }) {
     const [resendCountdown, setResendCountdown] = useState(180); // 3 minutes
 
     useEffect(() => {
+        const fetchClaimStatus = async () => {
+            try {
+                const res = await fetch(`/api/businesses/${id}`);
+                const data = await res.json();
+
+                if (data.userClaim) {
+                    const claim = data.userClaim;
+                    setMethod(claim.verification_method);
+
+                    if (claim.verification_method === 'dns') {
+                        setDomain(claim.domain || '');
+                        setDnsToken(claim.verification_data);
+                        // If verified, show success/pending approval, else show verify step
+                        if (claim.verification_status === 'verified') {
+                            setSuccess('DNS verified! Waiting for admin approval.');
+                            setSteps(prev => ({ ...prev, dns: 2 })); // Or a new 'completed' step
+                        } else {
+                            setSteps(prev => ({ ...prev, dns: 2 }));
+                        }
+                    } else if (claim.verification_method === 'email') {
+                        const [emailAddr] = claim.verification_data.split('|');
+                        setEmail(emailAddr);
+                        if (claim.verification_status === 'verified') {
+                            setSuccess('Email verified! Waiting for admin approval.');
+                            setSteps(prev => ({ ...prev, email: 2 }));
+                        } else {
+                            setSteps(prev => ({ ...prev, email: 2 }));
+                        }
+                    } else if (claim.verification_method === 'document') {
+                        setSuccess('Document submitted! Waiting for admin approval.');
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch claim status", err);
+            }
+        };
+
+        if (session) {
+            fetchClaimStatus();
+        }
+    }, [id, session]);
+
+    useEffect(() => {
         let timer;
         if (resendCountdown > 0) {
             timer = setInterval(() => {
