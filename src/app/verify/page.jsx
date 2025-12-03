@@ -127,6 +127,7 @@ function VerifyContent() {
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                         {isSubmitting ? 'Verifying...' : 'Verify Email'}
                     </Button>
+                </div>
             </form>
 
             <div className="mt-6 text-center">
