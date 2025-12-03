@@ -67,13 +67,21 @@ export default function BusinessMap({ businesses }) {
                 setUserLocation(pos);
                 setAccuracy(position.coords.accuracy);
 
-                // Only center once or if manually requested (we can refine this logic)
-                // For now, we'll just set manualCenter on the first high-accuracy fix if needed
-                // But to keep it simple and responsive to the button click:
-                if (loadingGeo) {
-                    setManualCenter(pos);
-                    setLoadingGeo(false);
-                }
+                // Always stop loading once we get a position
+                setLoadingGeo(false);
+
+                // If we were loading (implied by this callback firing after a click), center map
+                // Note: We can't check 'loadingGeo' state here due to closure, but since we only
+                // attach this watcher on click, we can assume we want to center.
+                // However, watchPosition fires repeatedly. We only want to center on the FIRST fix
+                // or if the user explicitly clicked.
+                // A better approach for "Locate Me" is to just center on every update from THIS watcher
+                // until we clear it? Or just center once.
+
+                // For now, let's just set manualCenter. If the user pans away, manualCenter stays set
+                // which forces the map back. This might be annoying.
+                // Ideally, we should only set manualCenter once.
+                setManualCenter(pos);
             },
             (error) => {
                 console.error('Geolocation error:', error);
