@@ -61,7 +61,7 @@ export default async function BusinessProfile({ params }) {
     const isUnclaimed = !business.owner_id;
     const hasPendingClaim = business.claim_status === 'pending' && business.claimant_id?.toString() === session?.user?.id;
     const isPendingApproval = business.status === 'pending';
-    const isSubmitter = business.submitted_by?.toString() === session?.user?.id;
+    const isSubmitter = session?.user?.id && business.submitted_by?.toString() === session.user.id;
 
     return (
         <main className="min-h-screen bg-slate-50 pb-12">
@@ -116,9 +116,7 @@ export default async function BusinessProfile({ params }) {
                                     </span>
                                 )}
                                 {business.subscription_tier === 'pro' && (
-                                    <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
-                                        <VerifiedBadge className="w-3 h-3" variant="gold" tooltip="Pro Business" /> Pro
-                                    </span>
+                                    <VerifiedBadge className="w-6 h-6" variant="gold" tooltip="Verified by business owner" />
                                 )}
                                 {isUnclaimed && (
                                     <span className="bg-gray-500 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">

@@ -124,7 +124,7 @@ export default function BusinessContent({ business, initialReviews, totalReviewC
     };
 
     const userReview = session ? reviews.find(r => (r.user_id?._id === session.user.id || r.user_id === session.user.id) && !r.is_deleted) : null;
-    const isOwner = session?.user?.id === business.owner_id;
+    const isOwner = session?.user?.id && session.user.id === business.owner_id;
 
     const handleReviewSubmitted = (newReview) => {
         if (isEditing) {
@@ -421,9 +421,17 @@ export default function BusinessContent({ business, initialReviews, totalReviewC
                                 className="w-full"
                             />
                             {business.subscription_tier === 'pro' && (
-                                <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
-                                    Book Now
-                                </Button>
+                                business.cta_url ? (
+                                    <a href={business.cta_url} target="_blank" rel="noopener noreferrer" className="block w-full">
+                                        <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
+                                            {business.cta_text || 'Book Now'}
+                                        </Button>
+                                    </a>
+                                ) : (
+                                    <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
+                                        {business.cta_text || 'Book Now'}
+                                    </Button>
+                                )
                             )}
                         </div>
                     </div>

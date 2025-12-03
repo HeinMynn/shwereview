@@ -78,7 +78,7 @@ export async function PUT(request, { params }) {
         const body = await request.json();
 
         // Fields allowed to update
-        const allowedUpdates = ['name', 'description', 'address', 'category', 'images', 'geo_coordinates'];
+        const allowedUpdates = ['name', 'description', 'address', 'category', 'images', 'geo_coordinates', 'cta_text', 'cta_url'];
         const updates = {};
 
         allowedUpdates.forEach(field => {

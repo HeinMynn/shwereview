@@ -66,6 +66,8 @@ const BusinessSchema = new mongoose.Schema({
         default: 'none'
     },
     subscription_end_date: { type: Date },
+    cta_text: { type: String, maxlength: 20 },
+    cta_url: { type: String },
 }, { timestamps: true });
 
 const BusinessClaimSchema = new mongoose.Schema({

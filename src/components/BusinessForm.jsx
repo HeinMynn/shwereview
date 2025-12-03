@@ -287,6 +287,42 @@ export default function BusinessForm({ initialData, onSubmit, isSubmitting, subm
                     )}
                 </div>
 
+
+
+                {/* Pro Features: Custom CTA */}
+                {initialData?.subscription_tier === 'pro' && (
+                    <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                        <h3 className="text-sm font-bold text-indigo-900 mb-3 flex items-center gap-2">
+                            <span className="text-lg">✨</span> Pro Feature: Custom Call-to-Action
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-indigo-800 mb-1">Button Text</label>
+                                <Input
+                                    name="cta_text"
+                                    value={formData.cta_text || ''}
+                                    onChange={handleChange}
+                                    placeholder="e.g., Book Now, Visit Website"
+                                    maxLength={20}
+                                    className="bg-white"
+                                />
+                                <p className="text-xs text-indigo-600 mt-1">Max 20 characters</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-indigo-800 mb-1">Button Link</label>
+                                <Input
+                                    name="cta_url"
+                                    value={formData.cta_url || ''}
+                                    onChange={handleChange}
+                                    placeholder="https://..."
+                                    className="bg-white"
+                                />
+                                <p className="text-xs text-indigo-600 mt-1">Must start with http:// or https://</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                     <select
@@ -306,6 +342,6 @@ export default function BusinessForm({ initialData, onSubmit, isSubmitting, subm
                     {isSubmitting ? 'Submitting...' : submitLabel}
                 </Button>
             </form>
-        </Card>
+        </Card >
     );
 }
