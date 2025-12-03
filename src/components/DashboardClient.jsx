@@ -208,13 +208,28 @@ export default function DashboardClient({ data }) {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="flex gap-2 w-full md:w-auto">
-                                                <Link href={`/business/${business._id}`} className="flex-1 md:flex-none">
-                                                    <Button variant="outline" className="w-full">View Page</Button>
-                                                </Link>
-                                                <Link href={`/business/${business._id}/edit`} className="flex-1 md:flex-none">
-                                                    <Button className="w-full">Edit</Button>
-                                                </Link>
+                                            <div className="flex flex-col gap-2 w-full md:w-auto">
+                                                <div className="flex gap-2">
+                                                    <Link href={`/business/${business._id}`} className="flex-1 md:flex-none">
+                                                        <Button variant="outline" className="w-full">View Page</Button>
+                                                    </Link>
+                                                    <Link href={`/business/${business._id}/edit`} className="flex-1 md:flex-none">
+                                                        <Button className="w-full">Edit</Button>
+                                                    </Link>
+                                                </div>
+                                                {business.subscription_tier === 'pro' ? (
+                                                    <div className="text-center">
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                                            Pro Plan Active
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <Link href={`/checkout?plan=pro&businessId=${business._id}`} className="w-full">
+                                                        <Button variant="default" className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white border-0">
+                                                            Upgrade to Pro
+                                                        </Button>
+                                                    </Link>
+                                                )}
                                             </div>
                                         </Card>
                                     ))}

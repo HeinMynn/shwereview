@@ -55,6 +55,17 @@ const BusinessSchema = new mongoose.Schema({
     aggregate_rating: { type: Number, default: 0 },
     review_count: { type: Number, default: 0 },
     micro_metrics_aggregates: { type: Map, of: Number, default: {} },
+    subscription_tier: {
+        type: String,
+        enum: ['free', 'pro'],
+        default: 'free'
+    },
+    subscription_status: {
+        type: String,
+        enum: ['active', 'past_due', 'canceled', 'none'],
+        default: 'none'
+    },
+    subscription_end_date: { type: Date },
 }, { timestamps: true });
 
 const BusinessClaimSchema = new mongoose.Schema({

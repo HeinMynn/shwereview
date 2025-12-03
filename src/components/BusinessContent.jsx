@@ -420,6 +420,11 @@ export default function BusinessContent({ business, initialReviews, totalReviewC
                                 text={`Check out ${business.name} on ShweReview!`}
                                 className="w-full"
                             />
+                            {business.subscription_tier === 'pro' && (
+                                <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
+                                    Book Now
+                                </Button>
+                            )}
                         </div>
                     </div>
 

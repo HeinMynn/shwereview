@@ -7,7 +7,8 @@ import BusinessContent from '@/components/BusinessContent';
 import { Button, Card } from '@/components/ui';
 import { Star, MapPin, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
-import ShareButton from '@/components/ShareButton';
+import VerifiedBadge from '@/components/VerifiedBadge';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -94,6 +95,11 @@ export default async function BusinessProfile({ params }) {
                                 {business.is_verified && (
                                     <span className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
                                         <CheckCircle className="w-3 h-3" /> Verified
+                                    </span>
+                                )}
+                                {business.subscription_tier === 'pro' && (
+                                    <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+                                        <VerifiedBadge className="w-3 h-3" variant="gold" tooltip="Pro Business" /> Pro
                                     </span>
                                 )}
                                 {isUnclaimed && (
