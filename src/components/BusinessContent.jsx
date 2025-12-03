@@ -426,78 +426,79 @@ export default function BusinessContent({ business, initialReviews, totalReviewC
                                 </Button>
                             )}
                         </div>
-
-                        {isOwner && business.subscription_tier !== 'pro' && (
-                            <Card className="p-6 bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-0 shadow-lg relative overflow-hidden">
-                                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
-                                <div className="relative z-10">
-                                    <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
-                                        <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                                        Go Pro
-                                    </h3>
-                                    <p className="text-indigo-100 text-sm mb-4">
-                                        Stand out from the competition with a verified badge, custom buttons, and detailed analytics.
-                                    </p>
-                                    <Link href={`/checkout?plan=pro&businessId=${business._id}`}>
-                                        <Button className="w-full bg-white text-indigo-600 hover:bg-indigo-50 font-bold border-0">
-                                            Upgrade Now
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </Card>
-                        )}
-
-                        {isOwner ? (
-                            <Card className="p-6 bg-slate-50 border-slate-200">
-                                <h3 className="font-bold text-slate-900 mb-2">Business Owner</h3>
-                                <p className="text-sm text-gray-600">You cannot review your own business.</p>
-                            </Card>
-                        ) : userReview && !isEditing ? (
-                            <Card className="p-6 bg-slate-50 border-slate-200">
-                                <h3 className="font-bold text-slate-900 mb-2">You reviewed this business</h3>
-                                <div className="mb-4 text-sm text-gray-600">
-                                    You gave it <b>{userReview.overall_rating.toFixed(1)}/5</b> stars.
-                                </div>
-                                <div className="flex gap-2">
-                                    <Button onClick={() => setIsEditing(true)} variant="outline" className="flex-1">
-                                        <Pencil className="w-4 h-4 mr-2" /> Edit Review
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        className="flex-1 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-                                        onClick={async () => {
-                                            if (!confirm('Are you sure you want to delete your review?')) return;
-                                            try {
-                                                const res = await fetch(`/api/reviews?id=${userReview._id}`, {
-                                                    method: 'DELETE',
-                                                });
-                                                if (res.ok) {
-                                                    setReviews(prev => prev.filter(r => r._id !== userReview._id));
-                                                    setReviewCount(prev => Math.max(0, prev - 1));
-                                                    setToast({ message: 'Review deleted', type: 'success' });
-                                                } else {
-                                                    throw new Error('Failed to delete');
-                                                }
-                                            } catch (error) {
-                                                console.error(error);
-                                                setToast({ message: 'Error deleting review', type: 'error' });
-                                            }
-                                        }}
-                                    >
-                                        Delete
-                                    </Button>
-                                </div>
-                            </Card>
-                        ) : (
-                            <ReviewForm
-                                businessId={business._id}
-                                category={business.category}
-                                onReviewSubmitted={handleReviewSubmitted}
-                                initialData={isEditing ? userReview : null}
-                            />
-                        )}
                     </div>
+
+                    {isOwner && business.subscription_tier !== 'pro' && (
+                        <Card className="p-6 bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-0 shadow-lg relative overflow-hidden">
+                            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+                            <div className="relative z-10">
+                                <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+                                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                                    Go Pro
+                                </h3>
+                                <p className="text-indigo-100 text-sm mb-4">
+                                    Stand out from the competition with a verified badge, custom buttons, and detailed analytics.
+                                </p>
+                                <Link href={`/checkout?plan=pro&businessId=${business._id}`}>
+                                    <Button className="w-full bg-white text-indigo-600 hover:bg-indigo-50 font-bold border-0">
+                                        Upgrade Now
+                                    </Button>
+                                </Link>
+                            </div>
+                        </Card>
+                    )}
+
+                    {isOwner ? (
+                        <Card className="p-6 bg-slate-50 border-slate-200">
+                            <h3 className="font-bold text-slate-900 mb-2">Business Owner</h3>
+                            <p className="text-sm text-gray-600">You cannot review your own business.</p>
+                        </Card>
+                    ) : userReview && !isEditing ? (
+                        <Card className="p-6 bg-slate-50 border-slate-200">
+                            <h3 className="font-bold text-slate-900 mb-2">You reviewed this business</h3>
+                            <div className="mb-4 text-sm text-gray-600">
+                                You gave it <b>{userReview.overall_rating.toFixed(1)}/5</b> stars.
+                            </div>
+                            <div className="flex gap-2">
+                                <Button onClick={() => setIsEditing(true)} variant="outline" className="flex-1">
+                                    <Pencil className="w-4 h-4 mr-2" /> Edit Review
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    className="flex-1 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+                                    onClick={async () => {
+                                        if (!confirm('Are you sure you want to delete your review?')) return;
+                                        try {
+                                            const res = await fetch(`/api/reviews?id=${userReview._id}`, {
+                                                method: 'DELETE',
+                                            });
+                                            if (res.ok) {
+                                                setReviews(prev => prev.filter(r => r._id !== userReview._id));
+                                                setReviewCount(prev => Math.max(0, prev - 1));
+                                                setToast({ message: 'Review deleted', type: 'success' });
+                                            } else {
+                                                throw new Error('Failed to delete');
+                                            }
+                                        } catch (error) {
+                                            console.error(error);
+                                            setToast({ message: 'Error deleting review', type: 'error' });
+                                        }
+                                    }}
+                                >
+                                    Delete
+                                </Button>
+                            </div>
+                        </Card>
+                    ) : (
+                        <ReviewForm
+                            businessId={business._id}
+                            category={business.category}
+                            onReviewSubmitted={handleReviewSubmitted}
+                            initialData={isEditing ? userReview : null}
+                        />
+                    )}
                 </div>
             </div>
-            );
+        </div>
+    );
 }
