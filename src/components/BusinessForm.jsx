@@ -100,6 +100,13 @@ export default function BusinessForm({ initialData, onSubmit, isSubmitting, subm
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Validate CTA URL if present
+        if (formData.cta_url && !/^https?:\/\//i.test(formData.cta_url)) {
+            setErrors(prev => ({ ...prev, cta_url: 'URL must start with http:// or https://' }));
+            return;
+        }
+
         onSubmit(formData);
     };
 
@@ -298,15 +305,22 @@ export default function BusinessForm({ initialData, onSubmit, isSubmitting, subm
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-indigo-800 mb-1">Button Text</label>
-                                <Input
+                                <select
                                     name="cta_text"
-                                    value={formData.cta_text || ''}
+                                    value={formData.cta_text || 'Book Now'}
                                     onChange={handleChange}
-                                    placeholder="e.g., Book Now, Visit Website"
-                                    maxLength={20}
-                                    className="bg-white"
-                                />
-                                <p className="text-xs text-indigo-600 mt-1">Max 20 characters</p>
+                                    className="w-full rounded-md border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950 bg-white"
+                                >
+                                    <option value="Book Now">Book Now</option>
+                                    <option value="Visit Website">Visit Website</option>
+                                    <option value="Learn More">Learn More</option>
+                                    <option value="Contact Us">Contact Us</option>
+                                    <option value="Sign Up">Sign Up</option>
+                                    <option value="View Menu">View Menu</option>
+                                    <option value="Shop Now">Shop Now</option>
+                                    <option value="Order Online">Order Online</option>
+                                    <option value="Get Quote">Get Quote</option>
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-indigo-800 mb-1">Button Link</label>
@@ -317,6 +331,7 @@ export default function BusinessForm({ initialData, onSubmit, isSubmitting, subm
                                     placeholder="https://..."
                                     className="bg-white"
                                 />
+                                {errors.cta_url && <p className="text-xs text-red-600 mt-1">{errors.cta_url}</p>}
                                 <p className="text-xs text-indigo-600 mt-1">Must start with http:// or https://</p>
                             </div>
                         </div>
