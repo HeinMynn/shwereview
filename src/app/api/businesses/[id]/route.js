@@ -87,6 +87,9 @@ export async function PUT(request, { params }) {
             }
         });
 
+        console.log('Received body:', body);
+        console.log('Updates to apply:', updates);
+
         // If updating critical info, maybe reset verification status? 
         // For now, we'll keep it simple.
 

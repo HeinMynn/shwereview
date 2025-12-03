@@ -39,6 +39,9 @@ export default function Navbar() {
 
                         {/* Desktop Menu */}
                         <div className="hidden md:flex items-center gap-4">
+                            <Link href="/pricing" className="text-slate-500 hover:text-indigo-600 font-medium">
+                                Pricing
+                            </Link>
                             <Link href="/search" className="text-slate-500 hover:text-indigo-600 p-2">
                                 <Search className="w-5 h-5" />
                             </Link>

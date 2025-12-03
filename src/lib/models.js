@@ -224,6 +224,11 @@ const HomepageConfigSchema = new mongoose.Schema({
 
 // Prevent overwrite on hot reload
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
+
+// Force refresh Business model in dev to pick up schema changes
+if (process.env.NODE_ENV === 'development') {
+    if (mongoose.models.Business) delete mongoose.models.Business;
+}
 const Business = mongoose.models.Business || mongoose.model('Business', BusinessSchema);
 const Review = mongoose.models.Review || mongoose.model('Review', ReviewSchema);
 const ReviewVote = mongoose.models.ReviewVote || mongoose.model('ReviewVote', ReviewVoteSchema);

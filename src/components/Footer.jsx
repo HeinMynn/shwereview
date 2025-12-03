@@ -39,6 +39,7 @@ export default function Footer() {
                         <h3 className="text-white font-bold text-lg mb-6">For Business</h3>
                         <ul className="space-y-4">
                             <li><Link href="/business/new" className="hover:text-indigo-400 transition-colors">Add a Business</Link></li>
+                            <li><Link href="/pricing" className="hover:text-indigo-400 transition-colors">Pricing</Link></li>
                             <li><Link href="/login" className="hover:text-indigo-400 transition-colors">Business Login</Link></li>
                             <li><Link href="#" className="hover:text-indigo-400 transition-colors">Claim your Business</Link></li>
                             <li><Link href="#" className="hover:text-indigo-400 transition-colors">Business Support</Link></li>

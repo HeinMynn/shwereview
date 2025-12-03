@@ -110,14 +110,6 @@ export default async function BusinessProfile({ params }) {
                                 <span className="bg-yellow-400 text-slate-900 text-xs font-bold px-2 py-1 rounded uppercase">
                                     {business.category}
                                 </span>
-                                {business.is_verified && (
-                                    <span className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
-                                        <CheckCircle className="w-3 h-3" /> Verified
-                                    </span>
-                                )}
-                                {business.subscription_tier === 'pro' && (
-                                    <VerifiedBadge className="w-6 h-6" variant="gold" tooltip="Verified by business owner" />
-                                )}
                                 {isUnclaimed && (
                                     <span className="bg-gray-500 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
                                         Unclaimed
@@ -129,7 +121,12 @@ export default async function BusinessProfile({ params }) {
                                     </span>
                                 )}
                             </div>
-                            <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">{business.name}</h1>
+                            <h1 className="text-3xl md:text-5xl font-bold text-white mb-2 flex items-center gap-3">
+                                {business.name}
+                                {business.subscription_tier === 'pro' && (
+                                    <VerifiedBadge className="w-8 h-8" variant="gold" tooltip="Verified by business owner" />
+                                )}
+                            </h1>
                             <div className="flex items-center gap-4 text-slate-300 text-sm">
                                 <div className="flex items-center gap-1">
                                     <MapPin className="w-4 h-4" /> {business.address}
