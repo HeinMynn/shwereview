@@ -14,9 +14,12 @@ export async function GET(request) {
             return NextResponse.json({ businesses: [] });
         }
 
+        // Escape special characters for regex
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
         // Case-insensitive search
         const businesses = await Business.find({
-            name: { $regex: query, $options: 'i' },
+            name: { $regex: escapedQuery, $options: 'i' },
             status: 'approved' // Only show approved businesses
         })
             .select('_id name address images category is_verified owner_id claim_status')

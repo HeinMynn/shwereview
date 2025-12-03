@@ -81,17 +81,39 @@ export async function POST(request) {
             // Store the email used for verification
             business.claim_email = data;
 
-            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            const code = crypto.randomInt(100000, 999999).toString();
 
             // Send real email
-            const emailSent = await sendVerificationEmail(data, code);
+            const emailResult = await sendVerificationEmail(data, code);
 
-            if (!emailSent) {
-                return NextResponse.json({ error: 'Failed to send verification email. Please check your SMTP settings.' }, { status: 500 });
+            if (!emailResult.success) {
+                console.error(`Failed to send claim verification email: ${emailResult.error}`);
+
+                // Notify Super Admins
+                const superAdmins = await User.find({ role: 'Super Admin' });
+                const notificationPromises = superAdmins.map(admin =>
+                    Notification.create({
+                        user_id: admin._id,
+                        type: 'other',
+                        title: 'Claim Email Failed',
+                        message: `Failed to send claim verification email to user ${session.user.name} for business "${business.name}". Error: ${emailResult.error}`,
+                        link: `/admin`,
+                        metadata: {
+                            business_id: business._id.toString(),
+                            business_name: business.name,
+                            claimant_id: session.user.id,
+                            error: emailResult.error
+                        }
+                    })
+                );
+                await Promise.all(notificationPromises);
+
+                return NextResponse.json({ error: 'Failed to send verification email. Please try again later.' }, { status: 500 });
             }
 
             // Store code temporarily
             business.claim_verification_data = `${data}|${code}`;
+            business.claim_last_sent_at = new Date(); // Set initial timestamp
             responseData = { message: 'Verification code sent to your email' };
         }
 

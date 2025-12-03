@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button, Card, Input } from '@/components/ui';
 import Link from 'next/link';
 import { FileText, Globe, Mail, CheckCircle, Copy } from 'lucide-react';
+import VerificationInput from '@/components/VerificationInput';
 
 export default function ClaimBusinessPage({ params }) {
     const { id } = use(params); // Fix for params access in Next.js 15+
@@ -20,11 +21,50 @@ export default function ClaimBusinessPage({ params }) {
     const [domain, setDomain] = useState('');
     const [verificationCode, setVerificationCode] = useState('');
 
-    const [step, setStep] = useState(1); // 1: Input, 2: Verify (for DNS/Email)
+    const [steps, setSteps] = useState({ document: 1, dns: 1, email: 1 }); // Track step for each method
     const [dnsToken, setDnsToken] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [isResending, setIsResending] = useState(false);
+    const [resendCountdown, setResendCountdown] = useState(180); // 3 minutes
+
+    useEffect(() => {
+        let timer;
+        if (resendCountdown > 0) {
+            timer = setInterval(() => {
+                setResendCountdown((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [resendCountdown]);
+
+    const handleResend = async () => {
+        setError('');
+        setSuccess('');
+        setIsResending(true);
+
+        try {
+            const res = await fetch('/api/businesses/claim/resend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ businessId: id, email }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to resend code');
+            }
+
+            setSuccess('Verification code resent! Please check your email.');
+            setResendCountdown(180); // Reset timer
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsResending(false);
+        }
+    };
 
     const handleFileUpload = (e) => {
         const file = e.target.files?.[0];
@@ -88,9 +128,9 @@ export default function ClaimBusinessPage({ params }) {
                 setTimeout(() => router.push(`/business/${id}`), 2000);
             } else if (method === 'dns') {
                 setDnsToken(data.token);
-                setStep(2);
+                setSteps(prev => ({ ...prev, dns: 2 }));
             } else if (method === 'email') {
-                setStep(2);
+                setSteps(prev => ({ ...prev, email: 2 }));
                 setSuccess('Verification code sent to your email');
             }
         } catch (err) {
@@ -154,19 +194,19 @@ export default function ClaimBusinessPage({ params }) {
                     {/* Method Tabs */}
                     <div className="flex border-b border-gray-200 mb-6">
                         <button
-                            onClick={() => { setMethod('document'); setStep(1); }}
+                            onClick={() => setMethod('document')}
                             className={`flex-1 pb-4 text-center font-medium text-sm ${method === 'document' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             <FileText className="w-4 h-4 inline-block mr-2" /> Document
                         </button>
                         <button
-                            onClick={() => { setMethod('dns'); setStep(1); }}
+                            onClick={() => setMethod('dns')}
                             className={`flex-1 pb-4 text-center font-medium text-sm ${method === 'dns' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             <Globe className="w-4 h-4 inline-block mr-2" /> DNS Record
                         </button>
                         <button
-                            onClick={() => { setMethod('email'); setStep(1); }}
+                            onClick={() => setMethod('email')}
                             className={`flex-1 pb-4 text-center font-medium text-sm ${method === 'email' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             <Mail className="w-4 h-4 inline-block mr-2" /> Email
@@ -262,7 +302,7 @@ export default function ClaimBusinessPage({ params }) {
                     {/* DNS Method */}
                     {method === 'dns' && (
                         <div className="space-y-6">
-                            {step === 1 ? (
+                            {steps.dns === 1 ? (
                                 <form onSubmit={handleInitiateClaim}>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-800 mb-1">Your Domain</label>
@@ -311,7 +351,7 @@ export default function ClaimBusinessPage({ params }) {
                     {/* Email Method */}
                     {method === 'email' && (
                         <div className="space-y-6">
-                            {step === 1 ? (
+                            {steps.email === 1 ? (
                                 <form onSubmit={handleInitiateClaim}>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-800 mb-1">Business Email</label>
@@ -332,14 +372,27 @@ export default function ClaimBusinessPage({ params }) {
                                     <p className="text-sm text-gray-700">
                                         Enter the code sent to <b>{email}</b>
                                     </p>
-                                    <Input
-                                        value={verificationCode}
-                                        onChange={(e) => setVerificationCode(e.target.value)}
-                                        placeholder="123456"
-                                    />
+                                    <div className="flex justify-center mb-4">
+                                        <VerificationInput
+                                            value={verificationCode}
+                                            onChange={setVerificationCode}
+                                        />
+                                    </div>
                                     <Button onClick={handleVerify} disabled={loading || !verificationCode} className="w-full">
                                         {loading ? 'Verifying...' : 'Verify Code'}
                                     </Button>
+                                    <div className="text-center mt-4">
+                                        <p className="text-sm text-gray-600 mb-2">Didn't receive the code?</p>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleResend}
+                                            disabled={resendCountdown > 0 || isResending}
+                                            className="w-full"
+                                        >
+                                            {isResending ? 'Sending...' : resendCountdown > 0 ? `Resend in ${Math.floor(resendCountdown / 60)}:${(resendCountdown % 60).toString().padStart(2, '0')}` : 'Resend Code'}
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
                         </div>

@@ -15,12 +15,22 @@ export async function GET(request) {
 
         if (to) {
             console.log(`Sending test email to ${to} using from: ${smtpFrom}`);
-            const sent = await sendVerificationEmail(to, 'TEST-123456', 'register');
-            return NextResponse.json({
-                message: sent ? 'Test email sent successfully' : 'Failed to send test email',
-                sent,
-                config: configStatus
-            });
+            const result = await sendVerificationEmail(to, 'TEST-123456', 'register');
+
+            if (result.success) {
+                return NextResponse.json({
+                    message: 'Test email sent successfully',
+                    success: true,
+                    config: configStatus
+                });
+            } else {
+                return NextResponse.json({
+                    message: 'Failed to send test email',
+                    success: false,
+                    error: result.error,
+                    config: configStatus
+                }, { status: 500 });
+            }
         }
 
         return NextResponse.json({

@@ -56,6 +56,8 @@ async function getHomepageConfig() {
     return JSON.parse(JSON.stringify(config));
 }
 
+import sanitizeHtml from 'sanitize-html';
+
 export default async function Home() {
     const businesses = await getBusinesses();
     const categories = await getCategories();
@@ -78,7 +80,7 @@ export default async function Home() {
                 </div>
 
                 <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-                    <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight" dangerouslySetInnerHTML={{ __html: config.hero.title }}>
+                    <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight" dangerouslySetInnerHTML={{ __html: sanitizeHtml(config.hero.title) }}>
                     </h1>
                     <p className="text-lg md:text-xl mb-10 text-slate-200 max-w-2xl mx-auto font-light">
                         {config.hero.subtitle}

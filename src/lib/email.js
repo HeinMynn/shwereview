@@ -11,7 +11,7 @@ export async function sendVerificationEmail(to, code, type = 'claim') {
     try {
         if (!process.env.SENDGRID_API_KEY) {
             console.error('SendGrid API Key is missing. Cannot send email.');
-            return false;
+            return { success: false, error: 'SendGrid API Key is missing' };
         }
 
         console.log('Attempting to send email via SendGrid to:', to);
@@ -68,12 +68,14 @@ export async function sendVerificationEmail(to, code, type = 'claim') {
 
         await sgMail.send(msg);
         console.log('Email sent successfully to:', to);
-        return true;
+        return { success: true };
     } catch (error) {
         console.error('Error sending email via SendGrid:', error);
+        let errorMessage = error.message;
         if (error.response) {
             console.error('SendGrid Response Body:', error.response.body);
+            errorMessage = JSON.stringify(error.response.body);
         }
-        return false;
+        return { success: false, error: errorMessage };
     }
 }

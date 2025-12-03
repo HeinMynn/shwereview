@@ -1,9 +1,10 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Card, Input } from '@/components/ui';
 import Link from 'next/link';
+import VerificationInput from '@/components/VerificationInput';
 
 function VerifyContent() {
     const router = useRouter();
@@ -15,6 +16,45 @@ function VerifyContent() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isResending, setIsResending] = useState(false);
+    const [resendCountdown, setResendCountdown] = useState(180); // 3 minutes
+
+    useEffect(() => {
+        let timer;
+        if (resendCountdown > 0) {
+            timer = setInterval(() => {
+                setResendCountdown((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [resendCountdown]);
+
+    const handleResend = async () => {
+        setError('');
+        setSuccess('');
+        setIsResending(true);
+
+        try {
+            const res = await fetch('/api/auth/resend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to resend code');
+            }
+
+            setSuccess('Verification code resent! Please check your email.');
+            setResendCountdown(180); // Reset timer
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsResending(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -77,19 +117,30 @@ function VerifyContent() {
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium mb-1">Verification Code</label>
-                    <Input
-                        type="text"
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        placeholder="Enter 6-digit code"
-                        required
-                    />
-                </div>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Verifying...' : 'Verify Email'}
-                </Button>
+                    <div>
+                        <label className="block text-sm font-medium mb-3 text-center">Verification Code</label>
+                        <VerificationInput
+                            value={code}
+                            onChange={setCode}
+                        />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                        {isSubmitting ? 'Verifying...' : 'Verify Email'}
+                    </Button>
             </form>
+
+            <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600 mb-2">Didn't receive the code?</p>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResend}
+                    disabled={resendCountdown > 0 || isResending}
+                    className="w-full"
+                >
+                    {isResending ? 'Sending...' : resendCountdown > 0 ? `Resend in ${Math.floor(resendCountdown / 60)}:${(resendCountdown % 60).toString().padStart(2, '0')}` : 'Resend Code'}
+                </Button>
+            </div>
 
             <div className="mt-4 text-center text-sm">
                 <Link href="/login" className="text-blue-600 hover:underline">Back to Login</Link>

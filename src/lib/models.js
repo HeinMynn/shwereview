@@ -20,6 +20,7 @@ const UserSchema = new mongoose.Schema({
     email_verified: { type: Boolean, default: false },
     verification_token: { type: String },
     verification_token_expires: { type: Date },
+    last_verification_sent_at: { type: Date }, // For rate limiting
     phone: { type: String, unique: true, sparse: true },
     phone_verified: { type: Boolean, default: false },
 }, { timestamps: true });
@@ -59,6 +60,7 @@ const BusinessSchema = new mongoose.Schema({
         default: 'document'
     },
     claim_verification_data: { type: String }, // DNS TXT record or Email address
+    claim_last_sent_at: { type: Date }, // For rate limiting claim emails
     claim_verification_status: {
         type: String,
         enum: ['pending', 'verified', 'failed'],
