@@ -218,5 +218,6 @@ const Report = mongoose.models.Report || mongoose.model('Report', ReportSchema);
 const Notification = mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
 const HomepageConfig = mongoose.models.HomepageConfig || mongoose.model('HomepageConfig', HomepageConfigSchema);
 const BusinessClaim = mongoose.models.BusinessClaim || mongoose.model('BusinessClaim', BusinessClaimSchema);
+const TelegramVerification = mongoose.models.TelegramVerification || mongoose.model('TelegramVerification', TelegramVerificationSchema);
 
 export { User, Business, Review, ReviewVote, Report, Notification, HomepageConfig, TelegramVerification, BusinessClaim };

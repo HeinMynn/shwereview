@@ -62,6 +62,7 @@ export default function VerifyPhonePage() {
             }
         } catch (error) {
             console.error('Failed to generate link', error);
+            setError('Failed to generate verification link. Please try again.');
         } finally {
             setLoading(false);
         }
