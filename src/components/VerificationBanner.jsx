@@ -14,9 +14,13 @@ export default function VerificationBanner() {
     useEffect(() => {
         if (session) {
             // Check for dismissal
-            const dismissedUntil = localStorage.getItem('verify_banner_dismissed_until');
-            if (dismissedUntil && new Date(dismissedUntil) > new Date()) {
-                setDismissed(true);
+            try {
+                const dismissedUntil = localStorage.getItem('verify_banner_dismissed_until');
+                if (dismissedUntil && new Date(dismissedUntil) > new Date()) {
+                    setDismissed(true);
+                }
+            } catch (e) {
+                console.warn('LocalStorage access denied', e);
             }
 
             fetch('/api/auth/status')
@@ -32,10 +36,15 @@ export default function VerificationBanner() {
     }, [session]);
 
     const handleDismiss = () => {
-        const thirtyDaysFromNow = new Date();
-        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-        localStorage.setItem('verify_banner_dismissed_until', thirtyDaysFromNow.toISOString());
-        setDismissed(true);
+        try {
+            const thirtyDaysFromNow = new Date();
+            thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+            localStorage.setItem('verify_banner_dismissed_until', thirtyDaysFromNow.toISOString());
+            setDismissed(true);
+        } catch (e) {
+            console.warn('LocalStorage access denied', e);
+            setDismissed(true); // Dismiss for session only
+        }
     };
 
     if (loading || !session || isVerified || dismissed) return null;
