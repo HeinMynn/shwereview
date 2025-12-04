@@ -294,6 +294,56 @@ export default function BusinessForm({ initialData, onSubmit, isSubmitting, subm
                     )}
                 </div>
 
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tags (Max 5)</label>
+                    <div className="flex gap-2 mb-2">
+                        <Input
+                            placeholder="Add a tag (e.g., 'seafood', 'wifi', 'outdoor')"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const val = e.target.value.trim();
+                                    if (val && (!formData.tags || formData.tags.length < 5) && !formData.tags?.includes(val)) {
+                                        setFormData(prev => ({ ...prev, tags: [...(prev.tags || []), val] }));
+                                        e.target.value = '';
+                                    }
+                                }
+                            }}
+                        />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={(e) => {
+                                const input = e.target.previousSibling;
+                                const val = input.value.trim();
+                                if (val && (!formData.tags || formData.tags.length < 5) && !formData.tags?.includes(val)) {
+                                    setFormData(prev => ({ ...prev, tags: [...(prev.tags || []), val] }));
+                                    input.value = '';
+                                }
+                            }}
+                        >
+                            Add
+                        </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {formData.tags?.map((tag, index) => (
+                            <span key={index} className="bg-slate-100 text-slate-700 px-2 py-1 rounded-full text-sm flex items-center gap-1">
+                                {tag}
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, tags: prev.tags.filter((_, i) => i !== index) }))}
+                                    className="text-slate-400 hover:text-red-500"
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                        Press Enter to add. Tags help users find your business in search.
+                    </p>
+                </div>
+
 
 
                 {/* Pro Features: Custom CTA */}

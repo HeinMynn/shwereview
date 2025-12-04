@@ -17,7 +17,7 @@ async function getOwnerData() {
 
     // 1. Find ALL businesses owned by this user
     const businesses = await Business.find({ owner_id: ownerId })
-        .select('name address images category status claim_status aggregate_rating micro_metrics_aggregates subscription_tier subscription_status subscription_end_date')
+        .select('name address images category status claim_status aggregate_rating micro_metrics_aggregates subscription_tier subscription_status subscription_end_date promoted_until ad_campaigns')
         .sort({ createdAt: -1 })
         .lean();
 

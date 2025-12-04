@@ -16,36 +16,71 @@ async function getBusinesses(searchParams) {
     const limit = 12;
     const skip = (page - 1) * limit;
 
-    let query = { status: 'approved' };
+    // Build Match Stage
+    let matchStage = { status: 'approved' };
 
     if (q) {
-        query.$text = { $search: q };
+        matchStage.$text = { $search: q };
     }
 
     if (category && category !== 'all') {
-        query.category = category;
+        matchStage.category = category;
     }
 
     if (rating) {
-        query.aggregate_rating = { $gte: parseFloat(rating) };
+        matchStage.aggregate_rating = { $gte: parseFloat(rating) };
     }
 
-    const totalBusinesses = await Business.countDocuments(query);
-    const totalPages = Math.ceil(totalBusinesses / limit);
+    // Build Pipeline
+    const pipeline = [
+        { $match: matchStage },
+        {
+            $addFields: {
+                isPromoted: {
+                    $cond: {
+                        if: { $gt: ["$promoted_until", new Date()] },
+                        then: 1,
+                        else: 0
+                    }
+                }
+            }
+        }
+    ];
 
-    let businessQuery = Business.find(query)
-        .select('name description address images category aggregate_rating status geo_coordinates review_count')
-        .skip(skip)
-        .limit(limit);
-
-    // If searching by text, sort by relevance score
+    // Sorting
+    let sortStage = { isPromoted: -1 };
     if (q) {
-        businessQuery = businessQuery.sort({ score: { $meta: "textScore" } });
+        // Project text score for sorting
+        pipeline.push({ $addFields: { score: { $meta: "textScore" } } });
+        sortStage.score = -1;
     } else {
-        businessQuery = businessQuery.sort({ aggregate_rating: -1 });
+        sortStage.aggregate_rating = -1;
     }
+    pipeline.push({ $sort: sortStage });
 
-    const businesses = await businessQuery.lean();
+    // Pagination (Facet)
+    pipeline.push({
+        $facet: {
+            metadata: [{ $count: "total" }],
+            data: [
+                { $skip: skip },
+                { $limit: limit },
+                {
+                    $project: {
+                        name: 1, description: 1, address: 1, images: 1, category: 1,
+                        aggregate_rating: 1, status: 1, geo_coordinates: 1, review_count: 1,
+                        promoted_until: 1, tags: 1 // Ensure we return this for the UI
+                    }
+                }
+            ]
+        }
+    });
+
+    const result = await Business.aggregate(pipeline);
+
+    const totalBusinesses = result[0].metadata[0]?.total || 0;
+    const businesses = result[0].data || [];
+    const totalPages = Math.ceil(totalBusinesses / limit);
 
     return {
         businesses: JSON.parse(JSON.stringify(businesses)),
@@ -162,9 +197,16 @@ export default async function SearchPage({ searchParams }) {
                                             <div className="p-4 flex-1 flex flex-col">
                                                 <div className="flex justify-between items-start mb-2">
                                                     <h3 className="font-bold text-lg text-gray-900 line-clamp-1">{business.name}</h3>
-                                                    <span className="text-xs font-medium px-2 py-1 bg-slate-100 rounded-full capitalize text-slate-600">
-                                                        {business.category}
-                                                    </span>
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <span className="text-xs font-medium px-2 py-1 bg-slate-100 rounded-full capitalize text-slate-600">
+                                                            {business.category}
+                                                        </span>
+                                                        {business.promoted_until && new Date(business.promoted_until) > new Date() && (
+                                                            <span className="text-[10px] font-bold px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full uppercase tracking-wide">
+                                                                Ad
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <p className="text-sm text-gray-500 mb-4 line-clamp-2 flex-1">
                                                     {business.description}

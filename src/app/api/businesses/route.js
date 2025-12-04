@@ -62,6 +62,7 @@ export async function POST(request) {
             is_verified: false,
             images: processedImages,
             geo_coordinates: body.geo_coordinates,
+            tags: body.tags || [],
         });
 
         return NextResponse.json({ success: true, business });

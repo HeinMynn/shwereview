@@ -56,12 +56,28 @@ async function getHomepageConfig() {
     return JSON.parse(JSON.stringify(config));
 }
 
+async function getPromotedBusinesses() {
+    await dbConnect();
+    const now = new Date();
+    const businesses = await Business.aggregate([
+        {
+            $match: {
+                status: 'approved',
+                promoted_until: { $gt: now }
+            }
+        },
+        { $sample: { size: 4 } } // Randomly select 4 active promoted businesses
+    ]);
+    return JSON.parse(JSON.stringify(businesses));
+}
+
 import sanitizeHtml from 'sanitize-html';
 
 export default async function Home() {
     const businesses = await getBusinesses();
     const categories = await getCategories();
     const config = await getHomepageConfig();
+    const promotedBusinesses = await getPromotedBusinesses();
 
     return (
         <main className="min-h-screen bg-white">
@@ -131,6 +147,58 @@ export default async function Home() {
                     </div>
                 </div>
             </section>
+
+            {/* Spotlight / Promoted Section */}
+            {promotedBusinesses.length > 0 && (
+                <section className="py-12 bg-indigo-50 border-b border-indigo-100">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center gap-2 mb-8">
+                            <TrendingUp className="w-6 h-6 text-indigo-600" />
+                            <h2 className="text-2xl font-bold text-slate-900">Spotlight</h2>
+                            <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide">Sponsored</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {promotedBusinesses.map((business) => (
+                                <Link key={business._id} href={`/business/${business._id}`} className="group">
+                                    <Card className="h-full hover:shadow-lg transition-all duration-300 border-indigo-100 bg-white">
+                                        <div className="h-40 bg-slate-200 relative overflow-hidden rounded-t-lg">
+                                            {business.images?.[0] ? (
+                                                <Image
+                                                    src={business.images[0]}
+                                                    alt={business.name}
+                                                    fill
+                                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-indigo-50 text-indigo-300">
+                                                    <MapPin className="w-8 h-8" />
+                                                </div>
+                                            )}
+                                            <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                                                <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                                                <span className="font-bold text-xs text-slate-900">
+                                                    {business.aggregate_rating?.toFixed(1) || 'New'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="p-4">
+                                            <h3 className="font-bold text-lg text-slate-900 mb-1 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+                                                {business.name}
+                                            </h3>
+                                            <p className="text-sm text-slate-500 line-clamp-1 mb-2">{business.address}</p>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-medium px-2 py-1 bg-slate-100 rounded-full capitalize text-slate-600">
+                                                    {business.category}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* Stats Section */}
             <section className="py-12 bg-white border-b border-slate-100">

@@ -68,7 +68,22 @@ const BusinessSchema = new mongoose.Schema({
     subscription_end_date: { type: Date },
     cta_text: { type: String, maxlength: 20 },
     cta_url: { type: String },
+    promoted_until: { type: Date },
+    ad_campaigns: [{
+        start_date: { type: Date, required: true },
+        end_date: { type: Date, required: true },
+        amount_paid: { type: Number, required: true },
+        transaction_id: { type: String }
+    }],
+    tags: {
+        type: [String],
+        validate: [arrayLimit, '{PATH} exceeds the limit of 5']
+    }
 }, { timestamps: true });
+
+function arrayLimit(val) {
+    return val.length <= 5;
+}
 
 const BusinessClaimSchema = new mongoose.Schema({
     business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', required: true },
@@ -182,7 +197,7 @@ BusinessSchema.index({ status: 1 });
 BusinessSchema.index({ aggregate_rating: -1 }); // For sorting by rating
 BusinessSchema.index({ submitted_by: 1 }); // For dashboard queries
 BusinessSchema.index({ createdAt: -1 }); // For sorting by date
-BusinessSchema.index({ name: 'text', description: 'text', address: 'text' }); // Text search index
+BusinessSchema.index({ name: 'text', description: 'text', address: 'text', tags: 'text' }); // Text search index
 
 // Compound Indexes for Performance
 BusinessSchema.index({ status: 1, aggregate_rating: -1 }); // Home page "Top Rated" query
