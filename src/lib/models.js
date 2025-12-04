@@ -33,11 +33,10 @@ const BusinessSchema = new mongoose.Schema({
         lat: Number,
         lng: Number,
     },
-    category: {
-        type: String,
-        enum: ['restaurant', 'shop', 'logistics', 'education'],
-        required: true,
-    },
+    category: { type: String, required: true }, // Changed to String to support both old enum and new dynamic categories temporarily, or just use String and validate in app
+    // Actually, let's use String for now to avoid breaking existing data that uses enum values. 
+    // We will migrate data later if needed.
+    subcategory: { type: String },
     images: [{ type: String }],
     owner_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     submitted_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // User who submitted the listing
@@ -190,8 +189,17 @@ const TelegramVerificationSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now, expires: 600 } // Expires in 10 minutes
 });
 
+const CategorySchema = new mongoose.Schema({
+    name: { type: String, required: true, unique: true },
+    slug: { type: String, required: true, unique: true },
+    icon: { type: String }, // Lucide icon name or emoji
+    subcategories: [{ type: String }],
+    order: { type: Number, default: 0 }
+});
+
 // Indexes
 BusinessSchema.index({ category: 1 });
+BusinessSchema.index({ subcategory: 1 });
 BusinessSchema.index({ owner_id: 1 });
 BusinessSchema.index({ status: 1 });
 BusinessSchema.index({ aggregate_rating: -1 }); // For sorting by rating
@@ -243,8 +251,10 @@ const User = mongoose.models.User || mongoose.model('User', UserSchema);
 // Force refresh Business model in dev to pick up schema changes
 if (process.env.NODE_ENV === 'development') {
     if (mongoose.models.Business) delete mongoose.models.Business;
+    if (mongoose.models.Category) delete mongoose.models.Category;
 }
 const Business = mongoose.models.Business || mongoose.model('Business', BusinessSchema);
+const Category = mongoose.models.Category || mongoose.model('Category', CategorySchema);
 const Review = mongoose.models.Review || mongoose.model('Review', ReviewSchema);
 const ReviewVote = mongoose.models.ReviewVote || mongoose.model('ReviewVote', ReviewVoteSchema);
 const Report = mongoose.models.Report || mongoose.model('Report', ReportSchema);
@@ -253,4 +263,4 @@ const HomepageConfig = mongoose.models.HomepageConfig || mongoose.model('Homepag
 const BusinessClaim = mongoose.models.BusinessClaim || mongoose.model('BusinessClaim', BusinessClaimSchema);
 const TelegramVerification = mongoose.models.TelegramVerification || mongoose.model('TelegramVerification', TelegramVerificationSchema);
 
-export { User, Business, Review, ReviewVote, Report, Notification, HomepageConfig, TelegramVerification, BusinessClaim };
+export { User, Business, Category, Review, ReviewVote, Report, Notification, HomepageConfig, TelegramVerification, BusinessClaim };

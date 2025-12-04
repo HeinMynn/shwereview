@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 async function getBusinesses(searchParams) {
     await dbConnect();
 
-    const { q, category, rating, page = 1 } = searchParams;
+    const { q, category, subcategory, rating, page = 1 } = searchParams;
     const limit = 12;
     const skip = (page - 1) * limit;
 
@@ -31,6 +31,10 @@ async function getBusinesses(searchParams) {
 
     if (category && category !== 'all') {
         matchStage.category = category;
+    }
+
+    if (subcategory) {
+        matchStage.subcategory = subcategory;
     }
 
     if (rating) {
@@ -104,6 +108,7 @@ export default async function SearchPage({ searchParams }) {
 
     const query = params.q || '';
     const category = params.category || 'all';
+    const subcategory = params.subcategory || '';
     const rating = params.rating || '';
     const showMap = params.map === 'true';
 
@@ -112,6 +117,7 @@ export default async function SearchPage({ searchParams }) {
         const newParams = new URLSearchParams();
         if (query) newParams.set('q', query);
         if (category && category !== 'all') newParams.set('category', category);
+        if (subcategory) newParams.set('subcategory', subcategory);
         if (rating) newParams.set('rating', rating);
         if (showMap) newParams.set('map', 'true');
         newParams.set('page', newPage.toString());
@@ -123,6 +129,7 @@ export default async function SearchPage({ searchParams }) {
         const newParams = new URLSearchParams();
         if (query) newParams.set('q', query);
         if (category && category !== 'all') newParams.set('category', category);
+        if (subcategory) newParams.set('subcategory', subcategory);
         if (rating) newParams.set('rating', rating);
         newParams.set('page', page.toString());
 
@@ -141,6 +148,7 @@ export default async function SearchPage({ searchParams }) {
             <SearchHeader
                 query={query}
                 category={category}
+                subcategory={subcategory}
                 rating={rating}
                 showMap={showMap}
                 toggleMapLink={toggleMapLink()}

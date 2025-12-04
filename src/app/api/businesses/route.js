@@ -63,6 +63,7 @@ export async function POST(request) {
             images: processedImages,
             geo_coordinates: body.geo_coordinates,
             tags: body.tags || [],
+            subcategory: body.subcategory,
         });
 
         return NextResponse.json({ success: true, business });

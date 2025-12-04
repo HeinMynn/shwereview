@@ -26,6 +26,34 @@ export default function BusinessForm({ initialData, onSubmit, isSubmitting, subm
     const [isSearching, setIsSearching] = useState(false);
     const [country, setCountry] = useState('Myanmar');
     const [geoStatus, setGeoStatus] = useState(null);
+    const [categories, setCategories] = useState([]);
+    const [availableSubcategories, setAvailableSubcategories] = useState([]);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch('/api/categories');
+                const data = await res.json();
+                if (data.categories) {
+                    setCategories(data.categories);
+                }
+            } catch (error) {
+                console.error('Failed to fetch categories:', error);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    useEffect(() => {
+        if (formData.category && categories.length > 0) {
+            const selectedCat = categories.find(c => c.slug === formData.category || c.name === formData.category);
+            if (selectedCat) {
+                setAvailableSubcategories(selectedCat.subcategories || []);
+            } else {
+                setAvailableSubcategories([]);
+            }
+        }
+    }, [formData.category, categories]);
 
     useEffect(() => {
         if (initialData) {
@@ -388,19 +416,38 @@ export default function BusinessForm({ initialData, onSubmit, isSubmitting, subm
                     </div>
                 )}
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                    <select
-                        name="category"
-                        value={formData.category}
-                        onChange={handleChange}
-                        className="w-full rounded-md border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950 bg-white"
-                    >
-                        <option value="restaurant">Restaurant</option>
-                        <option value="shop">Shop</option>
-                        <option value="logistics">Logistics</option>
-                        <option value="education">Education</option>
-                    </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select
+                            name="category"
+                            value={formData.category}
+                            onChange={(e) => {
+                                setFormData(prev => ({ ...prev, category: e.target.value, subcategory: '' }));
+                            }}
+                            className="w-full rounded-md border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950 bg-white"
+                        >
+                            <option value="">Select a Category</option>
+                            {categories.map(cat => (
+                                <option key={cat._id} value={cat.slug}>{cat.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Subcategory</label>
+                        <select
+                            name="subcategory"
+                            value={formData.subcategory || ''}
+                            onChange={handleChange}
+                            disabled={!availableSubcategories.length}
+                            className="w-full rounded-md border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950 bg-white disabled:bg-slate-50 disabled:text-slate-400"
+                        >
+                            <option value="">Select a Subcategory</option>
+                            {availableSubcategories.map(sub => (
+                                <option key={sub} value={sub}>{sub}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
                 <Button type="submit" disabled={isSubmitting} className="w-full">

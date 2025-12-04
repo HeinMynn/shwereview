@@ -5,9 +5,39 @@ import Link from 'next/link';
 import { Search, Filter, Map as MapIcon, List, Star } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 
-export default function SearchHeader({ query, category, rating, showMap, toggleMapLink }) {
+export default function SearchHeader({ query, category, subcategory, rating, showMap, toggleMapLink }) {
     const [isVisible, setIsVisible] = useState(true);
+    const [categories, setCategories] = useState([]);
+    const [availableSubcategories, setAvailableSubcategories] = useState([]);
     const lastScrollY = useRef(0);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch('/api/categories');
+                const data = await res.json();
+                if (data.categories) {
+                    setCategories(data.categories);
+                }
+            } catch (error) {
+                console.error('Failed to fetch categories:', error);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    useEffect(() => {
+        if (category && category !== 'all' && categories.length > 0) {
+            const selectedCat = categories.find(c => c.slug === category);
+            if (selectedCat) {
+                setAvailableSubcategories(selectedCat.subcategories || []);
+            } else {
+                setAvailableSubcategories([]);
+            }
+        } else {
+            setAvailableSubcategories([]);
+        }
+    }, [category, categories]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -54,6 +84,7 @@ export default function SearchHeader({ query, category, rating, showMap, toggleM
                         />
                         {/* Preserve other params */}
                         {category && category !== 'all' && <input type="hidden" name="category" value={category} />}
+                        {subcategory && <input type="hidden" name="subcategory" value={subcategory} />}
                         {rating && <input type="hidden" name="rating" value={rating} />}
                         {showMap && <input type="hidden" name="map" value="true" />}
                     </div>
@@ -78,22 +109,58 @@ export default function SearchHeader({ query, category, rating, showMap, toggleM
 
                     {/* Category Filter */}
                     <div className="flex gap-2 flex-shrink-0">
-                        {['all', 'restaurant', 'shop', 'logistics', 'education'].map((cat) => (
+                        <Link
+                            href={`/search?q=${query}&category=all&rating=${rating}${showMap ? '&map=true' : ''}`}
+                        >
+                            <span className={`
+                                px-3 py-1 rounded-full text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap block
+                                ${category === 'all' || !category
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
+                            `}>
+                                All
+                            </span>
+                        </Link>
+                        {categories.map((cat) => (
                             <Link
-                                key={cat}
-                                href={`/search?q=${query}&category=${cat}&rating=${rating}${showMap ? '&map=true' : ''}`}
+                                key={cat._id}
+                                href={`/search?q=${query}&category=${cat.slug}&rating=${rating}${showMap ? '&map=true' : ''}`}
                             >
                                 <span className={`
                                     px-3 py-1 rounded-full text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap block
-                                    ${category === cat
+                                    ${category === cat.slug
                                         ? 'bg-indigo-600 text-white'
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
                                 `}>
-                                    {cat}
+                                    {cat.name}
                                 </span>
                             </Link>
                         ))}
                     </div>
+
+                    {/* Subcategory Filter (Only if category selected) */}
+                    {availableSubcategories.length > 0 && (
+                        <>
+                            <div className="w-px h-6 bg-gray-300 mx-1 flex-shrink-0"></div>
+                            <div className="flex gap-2 flex-shrink-0">
+                                {availableSubcategories.map((sub) => (
+                                    <Link
+                                        key={sub}
+                                        href={`/search?q=${query}&category=${category}&subcategory=${sub}&rating=${rating}${showMap ? '&map=true' : ''}`}
+                                    >
+                                        <span className={`
+                                            px-3 py-1 rounded-full text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap block
+                                            ${subcategory === sub
+                                                ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                                                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}
+                                        `}>
+                                            {sub}
+                                        </span>
+                                    </Link>
+                                ))}
+                            </div>
+                        </>
+                    )}
 
                     <div className="w-px h-6 bg-gray-300 mx-1 flex-shrink-0"></div>
 
@@ -102,7 +169,7 @@ export default function SearchHeader({ query, category, rating, showMap, toggleM
                         {[4, 3].map((r) => (
                             <Link
                                 key={r}
-                                href={`/search?q=${query}&category=${category}&rating=${rating === r.toString() ? '' : r}${showMap ? '&map=true' : ''}`}
+                                href={`/search?q=${query}&category=${category}&subcategory=${subcategory || ''}&rating=${rating === r.toString() ? '' : r}${showMap ? '&map=true' : ''}`}
                             >
                                 <span className={`
                                     px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1 transition-colors whitespace-nowrap
