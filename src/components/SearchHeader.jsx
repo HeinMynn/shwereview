@@ -110,7 +110,7 @@ export default function SearchHeader({ query, category, subcategory, rating, sho
                     {/* Category Filter */}
                     <div className="flex gap-2 flex-shrink-0">
                         <Link
-                            href={`/search?q=${query}&category=all&rating=${rating}${showMap ? '&map=true' : ''}`}
+                            href={`/search?q=${encodeURIComponent(query)}&category=all&rating=${rating}${showMap ? '&map=true' : ''}`}
                         >
                             <span className={`
                                 px-3 py-1 rounded-full text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap block
@@ -124,7 +124,7 @@ export default function SearchHeader({ query, category, subcategory, rating, sho
                         {categories.map((cat) => (
                             <Link
                                 key={cat._id}
-                                href={`/search?q=${query}&category=${cat.slug}&rating=${rating}${showMap ? '&map=true' : ''}`}
+                                href={`/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(cat.slug)}&rating=${rating}${showMap ? '&map=true' : ''}`}
                             >
                                 <span className={`
                                     px-3 py-1 rounded-full text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap block
@@ -146,7 +146,7 @@ export default function SearchHeader({ query, category, subcategory, rating, sho
                                 {availableSubcategories.map((sub) => (
                                     <Link
                                         key={sub}
-                                        href={`/search?q=${query}&category=${category}&subcategory=${sub}&rating=${rating}${showMap ? '&map=true' : ''}`}
+                                        href={`/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(sub)}&rating=${rating}${showMap ? '&map=true' : ''}`}
                                     >
                                         <span className={`
                                             px-3 py-1 rounded-full text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap block
@@ -169,7 +169,7 @@ export default function SearchHeader({ query, category, subcategory, rating, sho
                         {[4, 3].map((r) => (
                             <Link
                                 key={r}
-                                href={`/search?q=${query}&category=${category}&subcategory=${subcategory || ''}&rating=${rating === r.toString() ? '' : r}${showMap ? '&map=true' : ''}`}
+                                href={`/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory || '')}&rating=${rating === r.toString() ? '' : r}${showMap ? '&map=true' : ''}`}
                             >
                                 <span className={`
                                     px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1 transition-colors whitespace-nowrap

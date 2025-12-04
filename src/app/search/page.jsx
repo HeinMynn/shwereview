@@ -41,6 +41,10 @@ async function getBusinesses(searchParams) {
         matchStage.aggregate_rating = { $gte: parseFloat(rating) };
     }
 
+    if (rating) {
+        matchStage.aggregate_rating = { $gte: parseFloat(rating) };
+    }
+
     // Build Pipeline
     const pipeline = [
         { $match: matchStage },
