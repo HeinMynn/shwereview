@@ -33,9 +33,7 @@ export async function POST(req) {
         // Recalculate aggregates for the business
         await updateBusinessAggregates(review.business_id);
 
-        // Update review count
-        const countChange = isHidden ? -1 : 1;
-        await Business.findByIdAndUpdate(review.business_id, { $inc: { review_count: countChange } });
+
 
         return NextResponse.json({ success: true, review });
     } catch (error) {

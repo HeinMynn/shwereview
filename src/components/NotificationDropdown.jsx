@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import useSWR, { mutate } from 'swr';
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
@@ -10,6 +11,7 @@ const fetcher = (...args) => fetch(...args).then(res => res.json());
 
 export default function NotificationDropdown() {
     const { data: session, update } = useSession();
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
 
@@ -111,6 +113,9 @@ export default function NotificationDropdown() {
             markAsRead(notification._id);
         }
         setIsOpen(false);
+        if (notification.link) {
+            router.push(notification.link);
+        }
     };
 
     if (!session) return null;
@@ -157,24 +162,40 @@ export default function NotificationDropdown() {
                         ) : (
                             <div className="divide-y divide-gray-100">
                                 {recentNotifications.map((notification) => (
-                                    <Link
+                                    <div
                                         key={notification._id}
-                                        href={notification.link || '#'}
-                                        onClick={() => handleNotificationClick(notification)}
-                                        className={`block p-4 hover:bg-gray-50 transition-colors ${!notification.is_read ? 'bg-blue-50' : ''
+                                        className={`block p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.is_read ? 'bg-blue-50' : ''
                                             }`}
+                                        onClick={() => handleNotificationClick(notification)}
                                     >
                                         <div className="flex justify-between items-start mb-1">
-                                            <h4 className="font-medium text-sm text-gray-900">
+                                            <span className="font-medium text-sm text-gray-900 hover:underline">
                                                 {notification.title}
-                                            </h4>
+                                            </span>
                                             {!notification.is_read && (
                                                 <span className="w-2 h-2 bg-blue-600 rounded-full mt-1"></span>
                                             )}
                                         </div>
-                                        <p className="text-xs text-gray-600 mb-1">
-                                            {notification.message}
-                                        </p>
+                                        <div className="text-xs text-gray-600 mb-1 whitespace-pre-wrap">
+                                            {notification.message.split(/(\[.*?\]\(.*?\))/g).map((part, i) => {
+                                                const match = part.match(/\[(.*?)\]\((.*?)\)/);
+                                                if (match) {
+                                                    return (
+                                                        <a
+                                                            key={i}
+                                                            href={match[2]}
+                                                            className="text-indigo-600 hover:underline font-medium"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            {match[1]}
+                                                        </a>
+                                                    );
+                                                }
+                                                return part;
+                                            })}
+                                        </div>
                                         <p className="text-xs text-gray-400">
                                             {new Date(notification.createdAt).toLocaleDateString('en-US', {
                                                 month: 'short',
@@ -183,7 +204,7 @@ export default function NotificationDropdown() {
                                                 minute: '2-digit',
                                             })}
                                         </p>
-                                    </Link>
+                                    </div>
                                 ))}
                             </div>
                         )}

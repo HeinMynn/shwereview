@@ -5,11 +5,12 @@ export async function updateBusinessAggregates(businessId) {
     if (!business) return;
 
     const result = await Review.aggregate([
-        { $match: { business_id: business._id, is_hidden: false } },
+        { $match: { business_id: business._id, is_hidden: false, is_deleted: false } }, // Ensure deleted reviews are excluded
         {
             $group: {
                 _id: null,
                 averageRating: { $avg: "$overall_rating" },
+                reviewCount: { $sum: 1 },
                 microRatings: { $push: "$micro_ratings" }
             }
         }
@@ -17,12 +18,13 @@ export async function updateBusinessAggregates(businessId) {
 
     if (result.length === 0) {
         business.aggregate_rating = 0;
+        business.review_count = 0;
         business.micro_metrics_aggregates = {};
         await business.save();
         return;
     }
 
-    const { averageRating, microRatings } = result[0];
+    const { averageRating, reviewCount, microRatings } = result[0];
 
     // Calculate micro-metrics averages
     // Since micro_ratings are stored as Maps/Objects in documents, we still need some processing
@@ -52,6 +54,7 @@ export async function updateBusinessAggregates(businessId) {
     }
 
     business.aggregate_rating = averageRating;
+    business.review_count = reviewCount;
     business.micro_metrics_aggregates = microAggregates;
     await business.save();
 }

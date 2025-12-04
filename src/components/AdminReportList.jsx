@@ -91,8 +91,12 @@ export default function AdminReportList() {
                                 {suggestedReasons[decisionModal.status]?.map((reason) => (
                                     <button
                                         key={reason}
+                                        type="button"
                                         onClick={() => setDecisionReason(reason)}
-                                        className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-1 rounded border border-gray-300 transition-colors"
+                                        className={`text-xs px-2 py-1 rounded border transition-colors ${decisionReason === reason
+                                                ? 'bg-indigo-100 border-indigo-500 text-indigo-700 font-medium'
+                                                : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border-gray-300'
+                                            }`}
                                     >
                                         {reason}
                                     </button>

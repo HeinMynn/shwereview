@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
-import { Review, Business, User } from '@/lib/models';
+import { Review, Business, User, Notification } from '@/lib/models';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
@@ -49,8 +49,12 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Business owners cannot review their own business' }, { status: 403 });
         }
 
-        // Check if user already reviewed this business
-        const existingReview = await Review.findOne({ user_id: user._id, business_id: businessId });
+        // Check if user already reviewed this business (excluding deleted reviews)
+        const existingReview = await Review.findOne({
+            user_id: user._id,
+            business_id: businessId,
+            is_deleted: false
+        });
         if (existingReview) {
             return NextResponse.json({ error: 'You have already reviewed this business' }, { status: 409 });
         }
@@ -73,10 +77,20 @@ export async function POST(request) {
         });
 
         // Update Business Aggregates (Reuse logic)
+        // This now also handles review_count
         await updateBusinessAggregates(businessId);
 
-        // Increment review count
-        await Business.findByIdAndUpdate(businessId, { $inc: { review_count: 1 } });
+        // Notify Business Owner
+        if (business.owner_id) {
+            await Notification.create({
+                user_id: business.owner_id,
+                type: 'review_received',
+                title: 'New Review Received',
+                message: `You have received a new review for ${business.name}.`,
+                link: `/business/${businessId}`,
+                is_read: false,
+            });
+        }
 
         // Fetch updated business
         const updatedBusiness = await Business.findById(businessId);
@@ -131,6 +145,19 @@ export async function PUT(request) {
         // Update Business Aggregates
         await updateBusinessAggregates(review.business_id);
 
+        // Notify Business Owner
+        const business = await Business.findById(review.business_id);
+        if (business && business.owner_id) {
+            await Notification.create({
+                user_id: business.owner_id,
+                type: 'review_updated',
+                title: 'Review Updated',
+                message: `A review for ${business.name} has been updated.`,
+                link: `/business/${business._id}`,
+                is_read: false,
+            });
+        }
+
         return NextResponse.json({ success: true, review });
     } catch (error) {
         console.error('Error updating review:', error);
@@ -170,10 +197,11 @@ export async function DELETE(request) {
         await review.save();
 
         // Update Business Aggregates
+        // This now also handles review_count
         await updateBusinessAggregates(review.business_id);
 
-        // Decrement review count
-        await Business.findByIdAndUpdate(review.business_id, { $inc: { review_count: -1 } });
+        // Decrement review count - REMOVED as it's handled in aggregation now
+        // await Business.findByIdAndUpdate(review.business_id, { $inc: { review_count: -1 } });
 
         return NextResponse.json({ success: true });
     } catch (error) {

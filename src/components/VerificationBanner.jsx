@@ -9,9 +9,16 @@ export default function VerificationBanner() {
     const { data: session } = useSession();
     const [isVerified, setIsVerified] = useState(true); // Default to true to avoid flash
     const [loading, setLoading] = useState(true);
+    const [dismissed, setDismissed] = useState(false);
 
     useEffect(() => {
         if (session) {
+            // Check for dismissal
+            const dismissedUntil = localStorage.getItem('verify_banner_dismissed_until');
+            if (dismissedUntil && new Date(dismissedUntil) > new Date()) {
+                setDismissed(true);
+            }
+
             fetch('/api/auth/status')
                 .then(res => res.json())
                 .then(data => {
@@ -24,7 +31,14 @@ export default function VerificationBanner() {
         }
     }, [session]);
 
-    if (loading || !session || isVerified) return null;
+    const handleDismiss = () => {
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+        localStorage.setItem('verify_banner_dismissed_until', thirtyDaysFromNow.toISOString());
+        setDismissed(true);
+    };
+
+    if (loading || !session || isVerified || dismissed) return null;
 
     return (
         <div className="bg-yellow-50 border-b border-yellow-200 p-3">
@@ -33,12 +47,20 @@ export default function VerificationBanner() {
                     <AlertTriangle className="w-4 h-4" />
                     <span>Your phone number is not verified. Verify now to unlock full features.</span>
                 </div>
-                <Link
-                    href="/verify-phone"
-                    className="text-xs font-bold bg-yellow-100 text-yellow-800 px-3 py-1.5 rounded hover:bg-yellow-200 transition-colors"
-                >
-                    Verify Now
-                </Link>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handleDismiss}
+                        className="text-xs font-medium text-yellow-700 hover:text-yellow-900 px-3 py-1.5"
+                    >
+                        Later
+                    </button>
+                    <Link
+                        href="/verify-phone"
+                        className="text-xs font-bold bg-yellow-100 text-yellow-800 px-3 py-1.5 rounded hover:bg-yellow-200 transition-colors"
+                    >
+                        Verify Now
+                    </Link>
+                </div>
             </div>
         </div>
     );

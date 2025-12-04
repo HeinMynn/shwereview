@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Bell, CheckCheck, Loader2 } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
 
 export default function NotificationsPage() {
     const { data: session } = useSession();
+    const router = useRouter();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [markingAllRead, setMarkingAllRead] = useState(false);
@@ -71,6 +73,9 @@ export default function NotificationsPage() {
         if (!notification.is_read) {
             markAsRead(notification._id);
         }
+        if (notification.link) {
+            router.push(notification.link);
+        }
     };
 
     if (!session) {
@@ -122,8 +127,8 @@ export default function NotificationsPage() {
                     <button
                         onClick={() => setFilter('all')}
                         className={`px-4 py-2 font-medium text-sm ${filter === 'all'
-                                ? 'border-b-2 border-indigo-600 text-indigo-600'
-                                : 'text-gray-600 hover:text-gray-900'
+                            ? 'border-b-2 border-indigo-600 text-indigo-600'
+                            : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         All ({notifications.length})
@@ -131,8 +136,8 @@ export default function NotificationsPage() {
                     <button
                         onClick={() => setFilter('unread')}
                         className={`px-4 py-2 font-medium text-sm ${filter === 'unread'
-                                ? 'border-b-2 border-indigo-600 text-indigo-600'
-                                : 'text-gray-600 hover:text-gray-900'
+                            ? 'border-b-2 border-indigo-600 text-indigo-600'
+                            : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         Unread ({unreadCount})
@@ -140,8 +145,8 @@ export default function NotificationsPage() {
                     <button
                         onClick={() => setFilter('read')}
                         className={`px-4 py-2 font-medium text-sm ${filter === 'read'
-                                ? 'border-b-2 border-indigo-600 text-indigo-600'
-                                : 'text-gray-600 hover:text-gray-900'
+                            ? 'border-b-2 border-indigo-600 text-indigo-600'
+                            : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         Read ({notifications.length - unreadCount})
@@ -169,17 +174,14 @@ export default function NotificationsPage() {
                         {filteredNotifications.map((notification) => (
                             <Card
                                 key={notification._id}
-                                className={`p-4 hover:shadow-md transition-shadow ${!notification.is_read ? 'border-l-4 border-l-indigo-600 bg-blue-50' : ''
+                                className={`p-4 hover:shadow-md transition-shadow cursor-pointer ${!notification.is_read ? 'border-l-4 border-l-indigo-600 bg-blue-50' : ''
                                     }`}
+                                onClick={() => handleNotificationClick(notification)}
                             >
-                                <Link
-                                    href={notification.link || '#'}
-                                    onClick={() => handleNotificationClick(notification)}
-                                    className="block"
-                                >
+                                <div className="block">
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="flex items-center gap-2">
-                                            <h3 className="font-semibold text-gray-900">
+                                            <h3 className="font-semibold text-gray-900 hover:underline">
                                                 {notification.title}
                                             </h3>
                                             {!notification.is_read && (
@@ -190,16 +192,35 @@ export default function NotificationsPage() {
                                         </div>
                                         <span
                                             className={`px-2 py-1 rounded text-xs font-medium ${notification.type === 'claim_approved'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : notification.type === 'claim_rejected'
-                                                        ? 'bg-red-100 text-red-800'
-                                                        : 'bg-gray-100 text-gray-800'
+                                                ? 'bg-green-100 text-green-800'
+                                                : notification.type === 'claim_rejected'
+                                                    ? 'bg-red-100 text-red-800'
+                                                    : 'bg-gray-100 text-gray-800'
                                                 }`}
                                         >
                                             {notification.type.replace('_', ' ')}
                                         </span>
                                     </div>
-                                    <p className="text-gray-700 mb-2">{notification.message}</p>
+                                    <div className="text-gray-700 mb-2 whitespace-pre-wrap">
+                                        {notification.message.split(/(\[.*?\]\(.*?\))/g).map((part, i) => {
+                                            const match = part.match(/\[(.*?)\]\((.*?)\)/);
+                                            if (match) {
+                                                return (
+                                                    <a
+                                                        key={i}
+                                                        href={match[2]}
+                                                        className="text-indigo-600 hover:underline font-medium"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        {match[1]}
+                                                    </a>
+                                                );
+                                            }
+                                            return part;
+                                        })}
+                                    </div>
                                     <p className="text-xs text-gray-500">
                                         {new Date(notification.createdAt).toLocaleDateString('en-US', {
                                             year: 'numeric',
@@ -209,7 +230,7 @@ export default function NotificationsPage() {
                                             minute: '2-digit',
                                         })}
                                     </p>
-                                </Link>
+                                </div>
                             </Card>
                         ))}
                     </div>

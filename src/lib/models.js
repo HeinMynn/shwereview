@@ -168,7 +168,7 @@ const NotificationSchema = new mongoose.Schema({
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     type: {
         type: String,
-        enum: ['claim_approved', 'claim_rejected', 'claim_pending', 'report_result', 'review_removed', 'other'],
+        enum: ['claim_approved', 'claim_rejected', 'claim_pending', 'report_result', 'review_removed', 'review_received', 'review_updated', 'reply_received', 'other'],
         required: true
     },
     title: { type: String, required: true },
@@ -253,6 +253,7 @@ const User = mongoose.models.User || mongoose.model('User', UserSchema);
 if (process.env.NODE_ENV === 'development') {
     if (mongoose.models.Business) delete mongoose.models.Business;
     if (mongoose.models.Category) delete mongoose.models.Category;
+    if (mongoose.models.Notification) delete mongoose.models.Notification;
 }
 const Business = mongoose.models.Business || mongoose.model('Business', BusinessSchema);
 const Category = mongoose.models.Category || mongoose.model('Category', CategorySchema);

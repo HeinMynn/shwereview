@@ -91,8 +91,8 @@ export default function SearchHeader({ query, category, subcategory, rating, sho
                     <Button type="submit" size="sm" className="h-9 sm:h-10 px-3 sm:px-4">Search</Button>
                 </form>
 
-                {/* Filters & Map Toggle - Scrollable Row on Mobile */}
-                <div className="flex items-center gap-2 mt-2 sm:mt-4 overflow-x-auto pb-1 sm:pb-2 no-scrollbar">
+                {/* Filters & Map Toggle - Scrollable Row on Mobile, Wrap on Desktop */}
+                <div className="flex items-center gap-2 mt-2 sm:mt-4 overflow-x-auto pb-1 sm:pb-2 no-scrollbar md:flex-wrap md:overflow-visible md:h-auto">
                     {/* Map Toggle - Fixed at start */}
                     <Link href={toggleMapLink} className="flex-shrink-0 mr-2">
                         <Button variant={showMap ? "default" : "outline"} size="sm" className="h-8 text-xs whitespace-nowrap">
@@ -108,7 +108,7 @@ export default function SearchHeader({ query, category, subcategory, rating, sho
                     </div>
 
                     {/* Category Filter */}
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex gap-2 flex-shrink-0 md:flex-wrap md:shrink">
                         <Link
                             href={`/search?q=${encodeURIComponent(query)}&category=all&rating=${rating}${showMap ? '&map=true' : ''}`}
                         >
@@ -142,7 +142,7 @@ export default function SearchHeader({ query, category, subcategory, rating, sho
                     {availableSubcategories.length > 0 && (
                         <>
                             <div className="w-px h-6 bg-gray-300 mx-1 flex-shrink-0"></div>
-                            <div className="flex gap-2 flex-shrink-0">
+                            <div className="flex gap-2 flex-shrink-0 md:flex-wrap md:shrink">
                                 {availableSubcategories.map((sub) => (
                                     <Link
                                         key={sub}
@@ -165,7 +165,7 @@ export default function SearchHeader({ query, category, subcategory, rating, sho
                     <div className="w-px h-6 bg-gray-300 mx-1 flex-shrink-0"></div>
 
                     {/* Rating Filter */}
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex gap-2 flex-shrink-0 md:flex-wrap md:shrink">
                         {[4, 3].map((r) => (
                             <Link
                                 key={r}

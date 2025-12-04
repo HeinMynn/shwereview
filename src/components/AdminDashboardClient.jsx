@@ -6,8 +6,9 @@ import AdminBusinessList from './AdminBusinessList';
 import AdminReportList from './AdminReportList';
 import AdminHomepageEditor from './AdminHomepageEditor';
 import AdminNotificationSender from './AdminNotificationSender';
+import AdminDataQuery from './AdminDataQuery';
 import { Card } from '@/components/ui';
-import { Users, Building2, AlertTriangle, LayoutGrid, FileText, Shield, Bell } from 'lucide-react';
+import { Users, Building2, AlertTriangle, LayoutGrid, FileText, Shield, Bell, Trash2, Database } from 'lucide-react';
 import VerifiedBadge from './VerifiedBadge';
 
 export default function AdminDashboardClient({ initialUsers, initialBusinesses, initialClaims }) {
@@ -50,6 +51,7 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses, 
                     <TabButton id="users" label="Users" icon={Users} />
                     <TabButton id="reports" label="Reports" icon={FileText} />
                     <TabButton id="notifications" label="Notifications" icon={Bell} />
+                    <TabButton id="query" label="Query" icon={Database} />
                     <TabButton id="homepage" label="Homepage Editor" icon={LayoutGrid} />
                 </div>
 
@@ -163,6 +165,10 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses, 
 
                 {activeTab === 'notifications' && (
                     <AdminNotificationSender users={users} />
+                )}
+
+                {activeTab === 'query' && (
+                    <AdminDataQuery />
                 )}
             </div>
         </div>

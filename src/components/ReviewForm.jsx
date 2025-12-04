@@ -7,30 +7,52 @@ import { Star, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 const CATEGORY_METRICS = {
-    restaurant: [
+    'food-dining': [
         { key: 'taste', label: 'Taste (အရသာ)' },
         { key: 'food_quality', label: 'Food Quality (အစားအသောက် အရည်အသွေး)' },
         { key: 'ambiance', label: 'Ambiance (ဆိုင်အပြင်အဆင်)' },
         { key: 'service', label: 'Service (ဝန်ဆောင်မှု)' },
         { key: 'value', label: 'Value (တန်ဖိုး)' },
     ],
-    shop: [
-        { key: 'quality', label: 'Quality (အရည်အသွေး)' },
+    'shopping': [
+        { key: 'quality', label: 'Product Quality (ပစ္စည်းအရည်အသွေး)' },
         { key: 'value', label: 'Value (တန်ဖိုး)' },
-        { key: 'checkout_speed', label: 'Checkout Speed (ငွေရှင်းမြန်ဆန်မှု)' },
+        { key: 'variety', label: 'Variety (ပစ္စည်းစုံလင်မှု)' },
         { key: 'service', label: 'Service (ဝန်ဆောင်မှု)' },
     ],
-    logistics: [
+    'services': [
+        { key: 'professionalism', label: 'Professionalism (ကျွမ်းကျင်မှု)' },
         { key: 'timeliness', label: 'Timeliness (အချိန်မှန်ကန်မှု)' },
-        { key: 'handling', label: 'Item Handling (ပစ္စည်းကိုင်တွယ်မှု)' },
-        { key: 'service', label: 'Service (ဝန်ဆောင်မှု)' },
+        { key: 'quality', label: 'Service Quality (ဝန်ဆောင်မှုအရည်အသွေး)' },
         { key: 'value', label: 'Value (တန်ဖိုး)' },
+        { key: 'communication', label: 'Communication (ဆက်ဆံရေး)' },
     ],
-    education: [
+    'education': [
         { key: 'teaching_quality', label: 'Teaching Quality (သင်ကြားမှု အရည်အသွေး)' },
         { key: 'student_support', label: 'Student Support (ကျောင်းသားပံ့ပိုးမှု)' },
         { key: 'facilities', label: 'Facilities (အထောက်အကူပြုပစ္စည်းများ)' },
         { key: 'environment', label: 'Environment (ပတ်ဝန်းကျင်)' },
+    ],
+    'beauty-wellness': [
+        { key: 'cleanliness', label: 'Cleanliness (သန့်ရှင်းမှု)' },
+        { key: 'service', label: 'Service (ဝန်ဆောင်မှု)' },
+        { key: 'expertise', label: 'Expertise (ကျွမ်းကျင်မှု)' },
+        { key: 'ambiance', label: 'Ambiance (ဆိုင်အပြင်အဆင်)' },
+        { key: 'value', label: 'Value (တန်ဖိုး)' },
+    ],
+    'entertainment': [
+        { key: 'fun_factor', label: 'Fun Factor (ပျော်ရွှင်ဖွယ်ရာ)' },
+        { key: 'facilities', label: 'Facilities (အထောက်အကူပြုပစ္စည်းများ)' },
+        { key: 'service', label: 'Service (ဝန်ဆောင်မှု)' },
+        { key: 'atmosphere', label: 'Atmosphere (လေထု)' },
+        { key: 'value', label: 'Value (တန်ဖိုး)' },
+    ],
+    'hospitality-travel': [
+        { key: 'cleanliness', label: 'Cleanliness (သန့်ရှင်းမှု)' },
+        { key: 'comfort', label: 'Comfort (သက်တောင့်သက်သာရှိမှု)' },
+        { key: 'location', label: 'Location (တည်နေရာ)' },
+        { key: 'service', label: 'Service (ဝန်ဆောင်မှု)' },
+        { key: 'value', label: 'Value (တန်ဖိုး)' },
     ],
 };
 
