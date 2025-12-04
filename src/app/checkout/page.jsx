@@ -30,9 +30,20 @@ function CheckoutForm() {
                 // Actually, we can use /api/businesses?owner_id=... if that exists, or just create a simple one.
                 // Let's assume we'll create /api/user/businesses for this.
                 const data = await res.json();
+
                 if (res.ok) {
                     setBusinesses(data.businesses || []);
-                    if (data.businesses?.length > 0) {
+
+                    // Auto-select business from URL param if available
+                    const businessIdFromUrl = searchParams.get('businessId');
+                    if (businessIdFromUrl) {
+                        const targetBusiness = data.businesses?.find(b => b._id === businessIdFromUrl);
+                        if (targetBusiness) {
+                            setSelectedBusinessId(targetBusiness._id);
+                        } else if (data.businesses?.length > 0) {
+                            setSelectedBusinessId(data.businesses[0]._id);
+                        }
+                    } else if (data.businesses?.length > 0) {
                         setSelectedBusinessId(data.businesses[0]._id);
                     }
                 }

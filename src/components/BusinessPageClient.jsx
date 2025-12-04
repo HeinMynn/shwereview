@@ -9,7 +9,7 @@ import VerifiedBadge from '@/components/VerifiedBadge';
 import BusinessGallery from '@/components/BusinessGallery';
 import BusinessContent from '@/components/BusinessContent';
 
-export default function BusinessPageClient({ initialBusiness, initialReviews, initialTotalReviewCount, isUnclaimed, hasPendingClaim, isSubmitter }) {
+export default function BusinessPageClient({ initialBusiness, initialReviews, initialTotalReviewCount, isUnclaimed, hasPendingClaim, isSubmitter, isOwner, similarBusinesses }) {
     const [business, setBusiness] = useState(initialBusiness);
     const [reviews, setReviews] = useState(initialReviews);
     const [totalReviewCount, setTotalReviewCount] = useState(initialTotalReviewCount);
@@ -182,6 +182,28 @@ export default function BusinessPageClient({ initialBusiness, initialReviews, in
                 </div>
             </div>
 
+            {/* Upgrade Banner (Secondary) */}
+            {isOwner && business.subscription_tier !== 'pro' && (
+                <div className="max-w-7xl mx-auto px-4 mt-6 mb-2">
+                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-6 text-white flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-white/20 p-3 rounded-full">
+                                <Star className="w-8 h-8 text-yellow-300 fill-yellow-300" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold">Upgrade to Pro</h3>
+                                <p className="text-indigo-100">Get a verified badge, custom buttons, and detailed analytics to grow your business.</p>
+                            </div>
+                        </div>
+                        <Link href={`/checkout?plan=pro&businessId=${business._id}`}>
+                            <Button size="lg" className="bg-white text-indigo-600 hover:bg-indigo-50 font-bold border-0 whitespace-nowrap">
+                                Upgrade Now
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+            )}
+
             {/* Image Gallery */}
             <BusinessGallery images={business.images} businessName={business.name} />
 
@@ -194,6 +216,50 @@ export default function BusinessPageClient({ initialBusiness, initialReviews, in
                 onReviewUpdate={handleReviewUpdate}
                 onReviewDelete={handleReviewDelete}
             />
+
+            {/* You May Also Like Section */}
+            {similarBusinesses && similarBusinesses.length > 0 && (
+                <div className="max-w-7xl mx-auto px-4 mt-12">
+                    <h2 className="text-2xl font-bold text-slate-900 mb-6">You May Also Like</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {similarBusinesses.map((biz) => (
+                            <Link key={biz._id} href={`/business/${biz._id}`} className="group">
+                                <div className="bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-md transition-shadow h-full flex flex-col">
+                                    <div className="h-48 overflow-hidden relative bg-slate-100">
+                                        <img
+                                            src={biz.images?.[0] || 'https://placehold.co/600x400/gray/white?text=No+Image'}
+                                            alt={biz.name}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                        />
+                                        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold text-slate-700 shadow-sm">
+                                            {biz.category}
+                                        </div>
+                                    </div>
+                                    <div className="p-4 flex flex-col flex-grow">
+                                        <h3 className="font-bold text-lg text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors line-clamp-1">
+                                            {biz.name}
+                                        </h3>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="flex items-center">
+                                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                                                <span className="font-bold text-slate-900 ml-1 text-sm">
+                                                    {biz.aggregate_rating?.toFixed(1) || 'New'}
+                                                </span>
+                                            </div>
+                                            <span className="text-slate-400 text-sm">•</span>
+                                            <span className="text-slate-500 text-sm">{biz.review_count || 0} reviews</span>
+                                        </div>
+                                        <div className="flex items-start gap-2 text-slate-500 text-sm mt-auto">
+                                            <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                            <span className="line-clamp-2">{biz.address}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
         </main>
     );
 }
