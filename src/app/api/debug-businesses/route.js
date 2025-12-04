@@ -5,15 +5,13 @@ import { Business } from '@/lib/models';
 export async function GET() {
     try {
         await dbConnect();
-        const businesses = await Business.find({});
+        const businesses = await Business.find({}).select('name country status').limit(20);
 
         const debugData = businesses.map(b => ({
             id: b._id,
             name: b.name,
-            category: b.category,
-            subcategory: b.subcategory,
-            status: b.status,
-            tags: b.tags
+            country: b.country,
+            status: b.status
         }));
 
         return NextResponse.json({ count: businesses.length, businesses: debugData });

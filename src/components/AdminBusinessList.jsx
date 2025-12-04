@@ -1,7 +1,7 @@
 'use client';
 
 import useSWR, { mutate } from 'swr';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui';
 import { CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -29,6 +29,39 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
     const [loadingId, setLoadingId] = useState(null);
     const [toast, setToast] = useState(null);
     const [geoStatus, setGeoStatus] = useState(null);
+    const [categories, setCategories] = useState([]);
+    const [availableSubcategories, setAvailableSubcategories] = useState([]);
+    const [editingBusiness, setEditingBusiness] = useState(null);
+    const [editForm, setEditForm] = useState({ name: '', description: '', address: '', category: '', subcategory: '', images: [] });
+    const [imageUploads, setImageUploads] = useState([]); // New images to upload (base64)
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch('/api/categories');
+                const data = await res.json();
+                if (data.categories) {
+                    setCategories(data.categories);
+                }
+            } catch (error) {
+                console.error('Failed to fetch categories:', error);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    useEffect(() => {
+        if (editForm.category && categories.length > 0) {
+            const selectedCat = categories.find(c => c.slug === editForm.category);
+            if (selectedCat) {
+                setAvailableSubcategories(selectedCat.subcategories || []);
+            } else {
+                setAvailableSubcategories([]);
+            }
+        } else {
+            setAvailableSubcategories([]);
+        }
+    }, [editForm.category, categories]);
 
     const updateStatus = async (businessId, newStatus) => {
         // ... (existing updateStatus logic)
@@ -101,9 +134,7 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
         }
     };
 
-    const [editingBusiness, setEditingBusiness] = useState(null);
-    const [editForm, setEditForm] = useState({ name: '', description: '', address: '', category: '', images: [] });
-    const [imageUploads, setImageUploads] = useState([]); // New images to upload (base64)
+
 
     const handleEditClick = (business) => {
         setEditingBusiness(business);
@@ -111,7 +142,9 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
             name: business.name,
             description: business.description || '',
             address: business.address || '',
-            category: business.category || 'restaurant',
+            category: business.category || '',
+            subcategory: business.subcategory || '',
+            country: business.country || 'Myanmar',
             images: business.images || [],
             geo_coordinates: business.geo_coordinates || { lat: '', lng: '' }
         });
@@ -210,15 +243,27 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
                                     <label className="block text-sm font-medium mb-1 text-gray-700">Category</label>
                                     <select
                                         value={editForm.category}
-                                        onChange={e => setEditForm({ ...editForm, category: e.target.value })}
+                                        onChange={e => setEditForm({ ...editForm, category: e.target.value, subcategory: '' })}
                                         className="w-full p-2 border border-gray-300 rounded bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                     >
-                                        <option value="restaurant">Restaurant</option>
-                                        <option value="shop">Shop</option>
-                                        <option value="logistics">Logistics</option>
-                                        <option value="education">Education</option>
-                                        <option value="hotel">Hotel</option>
-                                        <option value="service">Service</option>
+                                        <option value="">Select a Category</option>
+                                        {categories.map(cat => (
+                                            <option key={cat._id} value={cat.slug}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-gray-700">Subcategory</label>
+                                    <select
+                                        value={editForm.subcategory || ''}
+                                        onChange={e => setEditForm({ ...editForm, subcategory: e.target.value })}
+                                        disabled={!availableSubcategories.length}
+                                        className="w-full p-2 border border-gray-300 rounded bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:text-gray-400"
+                                    >
+                                        <option value="">Select a Subcategory</option>
+                                        {availableSubcategories.map(sub => (
+                                            <option key={sub} value={sub}>{sub}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>

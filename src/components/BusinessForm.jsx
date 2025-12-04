@@ -15,7 +15,7 @@ export default function BusinessForm({ initialData, onSubmit, isSubmitting, subm
         name: '',
         description: '',
         address: '',
-        category: 'restaurant',
+        category: '',
         images: [],
         geo_coordinates: null,
         ...initialData
