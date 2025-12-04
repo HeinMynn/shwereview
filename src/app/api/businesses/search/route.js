@@ -19,7 +19,10 @@ export async function GET(request) {
 
         // Case-insensitive search
         let businesses = await Business.find({
-            name: { $regex: escapedQuery, $options: 'i' },
+            $or: [
+                { name: { $regex: escapedQuery, $options: 'i' } },
+                { tags: { $in: [new RegExp(escapedQuery, 'i')] } }
+            ],
             status: 'approved' // Only show approved businesses
         })
             .select('_id name address images category is_verified owner_id claim_status promoted_until')

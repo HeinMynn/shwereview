@@ -20,7 +20,13 @@ async function getBusinesses(searchParams) {
     let matchStage = { status: 'approved' };
 
     if (q) {
-        matchStage.$text = { $search: q };
+        // Use regex for partial matching on name, description, and tags
+        const regex = new RegExp(q, 'i'); // Case-insensitive regex
+        matchStage.$or = [
+            { name: { $regex: regex } },
+            { description: { $regex: regex } },
+            { tags: { $in: [regex] } } // Match if any tag matches the regex
+        ];
     }
 
     if (category && category !== 'all') {
@@ -50,9 +56,10 @@ async function getBusinesses(searchParams) {
     // Sorting
     let sortStage = { isPromoted: -1 };
     if (q) {
-        // Project text score for sorting
-        pipeline.push({ $addFields: { score: { $meta: "textScore" } } });
-        sortStage.score = -1;
+        // For regex search, we don't have a textScore, so we sort by rating or promoted status
+        // We could potentially add a custom score based on where the match occurred (name > tags > description)
+        // but for now, let's stick to promoted > rating
+        sortStage.aggregate_rating = -1;
     } else {
         sortStage.aggregate_rating = -1;
     }
