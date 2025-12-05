@@ -15,16 +15,24 @@ export async function POST(request) {
         await dbConnect();
         const body = await request.json();
         console.log('Admin Status Update Request Body:', body);
-        const { businessId, status } = body;
+        const { businessId, status, rejection_reason } = body;
 
         if (!['approved', 'rejected', 'pending'].includes(status)) {
             console.error('Invalid status:', status);
             return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
         }
 
+        const updateData = { status };
+        if (status === 'rejected') {
+            updateData.rejection_reason = rejection_reason || 'No reason provided';
+        } else {
+            // Clear rejection reason if status is changed to approved/pending
+            updateData.rejection_reason = '';
+        }
+
         const business = await Business.findByIdAndUpdate(
             businessId,
-            { status },
+            updateData,
             { new: true }
         );
 

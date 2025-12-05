@@ -47,6 +47,8 @@ const BusinessSchema = new mongoose.Schema({
         enum: ['approved', 'pending', 'rejected'],
         default: 'pending',
     },
+    rejection_reason: { type: String },
+    appeal_message: { type: String },
     claim_status: {
         type: String,
         enum: ['unclaimed', 'pending', 'approved'],

@@ -110,7 +110,7 @@ export default async function BusinessProfile({ params }) {
     const hasPendingClaim = business.claim_status === 'pending' && business.claimant_id?.toString() === session?.user?.id;
     const isPendingApproval = business.status === 'pending';
     const isSubmitter = session?.user?.id && business.submitted_by?.toString() === session.user.id;
-    const isOwner = session?.user?.id && (business.owner_id?.toString() === session.user.id || business.submitted_by?.toString() === session.user.id);
+    const isOwner = session?.user?.id && business.owner_id?.toString() === session.user.id;
 
     return (
         <BusinessPageClient

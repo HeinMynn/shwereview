@@ -35,6 +35,12 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
     const [editForm, setEditForm] = useState({ name: '', description: '', address: '', category: '', subcategory: '', images: [] });
     const [imageUploads, setImageUploads] = useState([]); // New images to upload (base64)
 
+    // Rejection Modal State
+    const [rejectModalOpen, setRejectModalOpen] = useState(false);
+    const [businessToReject, setBusinessToReject] = useState(null);
+    const [rejectionReason, setRejectionReason] = useState('');
+    const [customRejectionReason, setCustomRejectionReason] = useState('');
+
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -63,7 +69,7 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
         }
     }, [editForm.category, categories]);
 
-    const updateStatus = async (businessId, newStatus) => {
+    const updateStatus = async (businessId, newStatus, reason = null) => {
         // ... (existing updateStatus logic)
         console.log('Updating status for:', businessId, 'to', newStatus);
         setLoadingId(businessId);
@@ -71,7 +77,7 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
             const res = await fetch('/api/admin/business-status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ businessId, status: newStatus }),
+                body: JSON.stringify({ businessId, status: newStatus, rejection_reason: reason }),
             });
 
             const data = await res.json();
@@ -132,6 +138,23 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
         } finally {
             setLoadingId(null);
         }
+    };
+
+    const openRejectModal = (business) => {
+        setBusinessToReject(business);
+        setRejectionReason('Duplicate Business');
+        setCustomRejectionReason('');
+        setRejectModalOpen(true);
+    };
+
+    const handleRejectConfirm = async () => {
+        if (!businessToReject) return;
+
+        const finalReason = rejectionReason === 'Other' ? customRejectionReason : rejectionReason;
+        await updateStatus(businessToReject._id, 'rejected', finalReason);
+
+        setRejectModalOpen(false);
+        setBusinessToReject(null);
     };
 
 
@@ -215,6 +238,47 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
                     type={toast.type}
                     onClose={() => setToast(null)}
                 />
+            )}
+
+            {/* Rejection Modal */}
+            {rejectModalOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+                        <h3 className="text-xl font-bold mb-4">Reject Business</h3>
+                        <p className="mb-4 text-gray-600">Please select a reason for rejecting <b>{businessToReject?.name}</b>.</p>
+
+                        <div className="space-y-3 mb-4">
+                            {['Duplicate Business', 'Does Not Exist', 'Inappropriate Content', 'Spam', 'Other'].map(reason => (
+                                <label key={reason} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="rejectionReason"
+                                        value={reason}
+                                        checked={rejectionReason === reason}
+                                        onChange={(e) => setRejectionReason(e.target.value)}
+                                        className="w-4 h-4 text-indigo-600"
+                                    />
+                                    <span className="text-gray-900">{reason}</span>
+                                </label>
+                            ))}
+                        </div>
+
+                        {rejectionReason === 'Other' && (
+                            <textarea
+                                value={customRejectionReason}
+                                onChange={(e) => setCustomRejectionReason(e.target.value)}
+                                placeholder="Enter specific reason..."
+                                className="w-full p-2 border border-gray-300 rounded mb-4"
+                                rows={3}
+                            />
+                        )}
+
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setRejectModalOpen(false)}>Cancel</Button>
+                            <Button variant="destructive" onClick={handleRejectConfirm}>Reject Business</Button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Edit Modal */}
@@ -545,6 +609,14 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
                                         Owner: {business.owner_id ? (business.owner_id.name || 'Assigned') : 'Unclaimed'}
                                     </div>
                                     <div className="text-xs text-gray-600 uppercase mt-1">{business.category}</div>
+
+                                    {/* Appeal Message Display */}
+                                    {business.status === 'pending' && business.appeal_message && (
+                                        <div className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-sm text-blue-800">
+                                            <span className="font-bold block mb-1">📢 Appeal Message:</span>
+                                            {business.appeal_message}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center gap-2">
@@ -575,7 +647,8 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
                                 </div>
                             </div>
 
-                            {(!business.status || business.status === 'pending') && (
+                            {/* Allow actions for Pending and Rejected (to revert) */}
+                            {(business.status !== 'approved') && (
                                 <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100 justify-end">
                                     <button
                                         type="button"
@@ -589,18 +662,22 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
                                     >
                                         <CheckCircle className="w-5 h-5" />
                                     </button>
-                                    <button
-                                        type="button"
-                                        className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors disabled:opacity-50"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            updateStatus(business._id, 'rejected');
-                                        }}
-                                        disabled={loadingId === business._id}
-                                        title="Reject"
-                                    >
-                                        <XCircle className="w-5 h-5" />
-                                    </button>
+
+                                    {/* Only show reject button if not already rejected */}
+                                    {business.status !== 'rejected' && (
+                                        <button
+                                            type="button"
+                                            className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors disabled:opacity-50"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openRejectModal(business);
+                                            }}
+                                            disabled={loadingId === business._id}
+                                            title="Reject"
+                                        >
+                                            <XCircle className="w-5 h-5" />
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>

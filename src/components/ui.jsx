@@ -12,6 +12,7 @@ export const Button = React.forwardRef(({ className, variant = "default", size =
         outline: "border border-slate-200 bg-white text-slate-900 hover:bg-slate-100",
         ghost: "text-slate-900 hover:bg-slate-100",
         link: "text-slate-900 underline-offset-4 hover:underline",
+        destructive: "bg-red-500 text-slate-50 hover:bg-red-500/90",
     }
     const sizes = {
         default: "h-10 px-4 py-2",

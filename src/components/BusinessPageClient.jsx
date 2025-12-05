@@ -1,37 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { MapPin, Star } from 'lucide-react';
+import { MapPin, Star, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui';
 import ShareButton from '@/components/ShareButton';
 import VerifiedBadge from '@/components/VerifiedBadge';
 import BusinessGallery from '@/components/BusinessGallery';
 import BusinessContent from '@/components/BusinessContent';
+import Toast from '@/components/Toast';
 
 export default function BusinessPageClient({ initialBusiness, initialReviews, initialTotalReviewCount, isUnclaimed, hasPendingClaim, isSubmitter, isOwner, similarBusinesses }) {
     const [business, setBusiness] = useState(initialBusiness);
     const [reviews, setReviews] = useState(initialReviews);
     const [totalReviewCount, setTotalReviewCount] = useState(initialTotalReviewCount);
+    const [toast, setToast] = useState(null);
+    const [mounted, setMounted] = useState(false);
+
+    // Appeal State
+    const [isAppealModalOpen, setIsAppealModalOpen] = useState(false);
+    const [appealMessage, setAppealMessage] = useState('');
+    const [isSubmittingAppeal, setIsSubmittingAppeal] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleReviewSubmit = (newReview) => {
-        // Update reviews list
         setReviews(prev => [newReview, ...prev]);
         setTotalReviewCount(prev => prev + 1);
-
-        // Update business rating
         setBusiness(prev => {
             const newCount = (prev.review_count || 0) + 1;
-            // Calculate new average
-            // (Old Avg * Old Count + New Rating) / New Count
-            // Note: This is an approximation if we don't have the exact previous sum, but good enough for client-side optimistic update.
-            // Better: Use the returned business object if the API returns it, but for now we calculate.
-            // Actually, the review API might return the updated business stats? 
-            // Usually it's safer to just re-fetch or approximate. 
-            // Let's approximate for immediate feedback.
             const currentTotalScore = (prev.aggregate_rating || 0) * (prev.review_count || 0);
             const newRating = (currentTotalScore + newReview.overall_rating) / newCount;
-
             return {
                 ...prev,
                 review_count: newCount,
@@ -47,10 +48,32 @@ export default function BusinessPageClient({ initialBusiness, initialReviews, in
     const handleReviewDelete = (reviewId) => {
         setReviews(prev => prev.filter(r => r._id !== reviewId));
         setTotalReviewCount(prev => Math.max(0, prev - 1));
-        // Note: Aggregates are updated on server, client state is optimistic/approximate until reload
     };
 
-    // Helper to render stars
+    const handleAppealSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmittingAppeal(true);
+        try {
+            const res = await fetch('/api/business/appeal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ businessId: business._id, appealMessage }),
+            });
+
+            if (!res.ok) throw new Error('Failed to submit appeal');
+
+            setToast({ message: 'Appeal submitted successfully. Business is now pending review.', type: 'success' });
+            setIsAppealModalOpen(false);
+            // Reload page to reflect status change
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (error) {
+            console.error(error);
+            setToast({ message: 'Failed to submit appeal', type: 'error' });
+        } finally {
+            setIsSubmittingAppeal(false);
+        }
+    };
+
     const renderStars = (rating) => {
         return (
             <div className="flex items-center">
@@ -75,8 +98,18 @@ export default function BusinessPageClient({ initialBusiness, initialReviews, in
         );
     };
 
+    if (!mounted) return null;
+
     return (
-        <main className="min-h-screen bg-slate-50 pb-12">
+        <main className="min-h-screen bg-slate-50 pb-12 relative">
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
+
             {business.status === 'pending' && (
                 <div className="bg-yellow-500 text-white text-center py-3 px-4 font-bold sticky top-16 z-30 shadow-md">
                     <div className="flex items-center justify-center gap-2">
@@ -90,8 +123,35 @@ export default function BusinessPageClient({ initialBusiness, initialReviews, in
                 </div>
             )}
 
+            {business.status === 'rejected' && (isSubmitter || isOwner) && (
+                <div className="bg-red-600 text-white text-center py-4 px-4 font-bold sticky top-16 z-30 shadow-md">
+                    <div className="flex flex-col items-center justify-center gap-1">
+                        <div className="flex items-center gap-2 text-lg">
+                            <span className="text-2xl">❌</span>
+                            <span>Your submission was rejected.</span>
+                        </div>
+                        {business.rejection_reason && (
+                            <div className="text-sm font-medium bg-white text-red-700 px-3 py-1 rounded mt-1 shadow-sm">
+                                <strong>Reason:</strong> {business.rejection_reason}
+                            </div>
+                        )}
+                        <div className="text-xs font-normal mt-1 opacity-90">
+                            Please contact support if you believe this is a mistake.
+                        </div>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            className="mt-2 bg-white text-red-600 hover:bg-red-50 border-0"
+                            onClick={() => setIsAppealModalOpen(true)}
+                        >
+                            Appeal Decision
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             {/* Owner Upgrade Banner */}
-            {isSubmitter && business.subscription_tier !== 'pro' && (
+            {isOwner && business.subscription_tier !== 'pro' && (
                 <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-center py-3 px-4 font-bold sticky top-16 z-20 shadow-md">
                     <div className="flex items-center justify-center gap-4 flex-wrap">
                         <div className="flex items-center gap-2">
@@ -182,28 +242,6 @@ export default function BusinessPageClient({ initialBusiness, initialReviews, in
                 </div>
             </div>
 
-            {/* Upgrade Banner (Secondary) */}
-            {isOwner && business.subscription_tier !== 'pro' && (
-                <div className="max-w-7xl mx-auto px-4 mt-6 mb-2">
-                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-6 text-white flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
-                        <div className="flex items-center gap-4">
-                            <div className="bg-white/20 p-3 rounded-full">
-                                <Star className="w-8 h-8 text-yellow-300 fill-yellow-300" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-bold">Upgrade to Pro</h3>
-                                <p className="text-indigo-100">Get a verified badge, custom buttons, and detailed analytics to grow your business.</p>
-                            </div>
-                        </div>
-                        <Link href={`/checkout?plan=pro&businessId=${business._id}`}>
-                            <Button size="lg" className="bg-white text-indigo-600 hover:bg-indigo-50 font-bold border-0 whitespace-nowrap">
-                                Upgrade Now
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
-            )}
-
             {/* Image Gallery */}
             <BusinessGallery images={business.images} businessName={business.name} />
 
@@ -257,6 +295,41 @@ export default function BusinessPageClient({ initialBusiness, initialReviews, in
                                 </div>
                             </Link>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Appeal Modal */}
+            {isAppealModalOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold">Appeal Rejection</h3>
+                            <button onClick={() => setIsAppealModalOpen(false)} className="text-gray-500 hover:text-gray-700">
+                                <XCircle className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleAppealSubmit}>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Please explain why your business should be approved. This message will be sent to the admin for review.
+                            </p>
+                            <textarea
+                                value={appealMessage}
+                                onChange={(e) => setAppealMessage(e.target.value)}
+                                placeholder="Enter your appeal message..."
+                                className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                rows={4}
+                                required
+                            />
+                            <div className="flex justify-end gap-2">
+                                <Button type="button" variant="outline" onClick={() => setIsAppealModalOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit" disabled={isSubmittingAppeal}>
+                                    {isSubmittingAppeal ? 'Submitting...' : 'Submit Appeal'}
+                                </Button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
