@@ -53,7 +53,6 @@ export default function AdminHomepageEditor() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-slate-800">Homepage Editor</h2>
                 <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Changes

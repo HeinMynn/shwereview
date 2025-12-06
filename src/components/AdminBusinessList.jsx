@@ -590,7 +590,6 @@ export default function AdminBusinessList({ initialBusinesses, initialClaims }) 
 
             {/* Business List */}
             <div>
-                <h3 className="font-bold text-gray-800 mb-4">All Businesses</h3>
                 <div className="space-y-4 max-h-[500px] overflow-y-auto">
                     {businesses.map(business => (
                         <div key={business._id} className="p-3 bg-white border rounded-lg flex flex-col gap-2">

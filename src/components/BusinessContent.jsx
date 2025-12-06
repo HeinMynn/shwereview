@@ -13,7 +13,7 @@ import ShareButton from '@/components/ShareButton';
 
 import Lightbox from '@/components/Lightbox';
 
-export default function BusinessContent({ business, reviews, totalReviewCount, onReviewSubmit, onReviewUpdate, onReviewDelete }) {
+export default function BusinessContent({ business, reviews, totalReviewCount, onReviewSubmit, onReviewUpdate, onReviewDelete, trackEvent }) {
     const { data: session } = useSession();
     // Removed internal state for reviews and reviewCount as they are now controlled by parent
     const [isEditing, setIsEditing] = useState(false);
@@ -439,6 +439,28 @@ export default function BusinessContent({ business, reviews, totalReviewCount, o
                                 <MapPin className="w-5 h-5 text-slate-500 mt-1" />
                                 <p className="text-slate-700">{business.address}</p>
                             </div>
+
+                            {business.contact_phone && (
+                                <div className="flex items-center gap-3">
+                                    <div className="w-5 flex justify-center">
+                                        <span className="text-lg">📞</span>
+                                    </div>
+                                    <a href={`tel:${business.contact_phone}`} className="text-indigo-600 hover:underline">
+                                        {business.contact_phone}
+                                    </a>
+                                </div>
+                            )}
+
+                            {business.contact_email && (
+                                <div className="flex items-center gap-3">
+                                    <div className="w-5 flex justify-center">
+                                        <span className="text-lg">✉️</span>
+                                    </div>
+                                    <a href={`mailto:${business.contact_email}`} className="text-indigo-600 hover:underline break-all">
+                                        {business.contact_email}
+                                    </a>
+                                </div>
+                            )}
                             <ShareButton
                                 title={business.name}
                                 text={`Check out ${business.name} on ShweReview!`}
@@ -446,7 +468,13 @@ export default function BusinessContent({ business, reviews, totalReviewCount, o
                             />
                             {business.subscription_tier === 'pro' && (
                                 business.cta_url ? (
-                                    <a href={business.cta_url} target="_blank" rel="noopener noreferrer" className="block w-full">
+                                    <a
+                                        href={business.cta_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block w-full"
+                                        onClick={() => trackEvent && trackEvent('click_website')}
+                                    >
                                         <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
                                             {business.cta_text || 'Book Now'}
                                         </Button>

@@ -15,6 +15,8 @@ export default function BusinessForm({ initialData, onSubmit, isSubmitting, subm
         name: '',
         description: '',
         address: '',
+        contact_phone: '',
+        contact_email: '',
         category: '',
         images: [],
         geo_coordinates: null,
@@ -263,6 +265,28 @@ export default function BusinessForm({ initialData, onSubmit, isSubmitting, subm
                             Get Address
                         </Button>
                     </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Phone (Optional)</label>
+                            <Input
+                                name="contact_phone"
+                                value={formData.contact_phone || ''}
+                                onChange={handleChange}
+                                placeholder="e.g. +959..."
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email (Optional)</label>
+                            <Input
+                                name="contact_email"
+                                value={formData.contact_email || ''}
+                                onChange={handleChange}
+                                placeholder="e.g. contact@business.com"
+                                type="email"
+                            />
+                        </div>
+                    </div>
                     {geoStatus && (
                         <p className={`text-xs mt-1 ${geoStatus.type === 'success' ? 'text-green-600' :
                             geoStatus.type === 'error' ? 'text-red-600' : 'text-blue-600'
@@ -271,7 +295,7 @@ export default function BusinessForm({ initialData, onSubmit, isSubmitting, subm
                         </p>
                     )}
 
-                    {formData.geo_coordinates && (
+                    {formData.geo_coordinates && typeof formData.geo_coordinates.lat === 'number' && typeof formData.geo_coordinates.lng === 'number' && (
                         <p className="text-xs text-green-600 mt-1">
                             ✓ Coordinates set: {formData.geo_coordinates.lat.toFixed(4)}, {formData.geo_coordinates.lng.toFixed(4)}
                         </p>

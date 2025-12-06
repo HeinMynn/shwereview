@@ -314,6 +314,7 @@ export default function BusinessPageClient({ initialBusiness, initialReviews, in
                 onReviewSubmit={handleReviewSubmit}
                 onReviewUpdate={handleReviewUpdate}
                 onReviewDelete={handleReviewDelete}
+                trackEvent={trackEvent}
             />
 
             {/* You May Also Like Section */}

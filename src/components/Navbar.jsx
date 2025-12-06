@@ -7,9 +7,17 @@ import { Button } from './ui';
 import { User, LogOut, LayoutDashboard, Shield, AlertTriangle, Menu, X, Search } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 
+import { usePathname } from 'next/navigation';
+
 export default function Navbar() {
     const { data: session } = useSession();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const pathname = usePathname();
+
+    // Hide Navbar on Dashboard and Admin pages (they have their own layout)
+    if (pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin')) {
+        return null;
+    }
 
     return (
         <>
