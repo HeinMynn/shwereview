@@ -267,4 +267,30 @@ const HomepageConfig = mongoose.models.HomepageConfig || mongoose.model('Homepag
 const BusinessClaim = mongoose.models.BusinessClaim || mongoose.model('BusinessClaim', BusinessClaimSchema);
 const TelegramVerification = mongoose.models.TelegramVerification || mongoose.model('TelegramVerification', TelegramVerificationSchema);
 
-export { User, Business, Category, Review, ReviewVote, Report, Notification, HomepageConfig, TelegramVerification, BusinessClaim };
+const BusinessMetricSchema = new mongoose.Schema({
+    business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', required: true },
+    date: { type: Date, required: true }, // Midnight UTC timestamp
+    views: { type: Number, default: 0 },
+    clicks_website: { type: Number, default: 0 },
+    clicks_call: { type: Number, default: 0 },
+    clicks_direction: { type: Number, default: 0 },
+    clicks_share: { type: Number, default: 0 },
+}, { timestamps: true });
+
+// Compound index for efficient upserts by date+business
+BusinessMetricSchema.index({ business_id: 1, date: 1 }, { unique: true });
+
+const BusinessMetric = mongoose.models.BusinessMetric || mongoose.model('BusinessMetric', BusinessMetricSchema);
+
+const SystemConfigSchema = new mongoose.Schema({
+    key: { type: String, required: true, unique: true, default: 'pricing' }, // specific key to ensure singleton-like behavior
+    pricing: {
+        pro_monthly: { type: Number, default: 29 },
+        promote_7_days: { type: Number, default: 5 },
+        promote_30_days: { type: Number, default: 15 },
+    }
+}, { timestamps: true });
+
+const SystemConfig = mongoose.models.SystemConfig || mongoose.model('SystemConfig', SystemConfigSchema);
+
+export { User, Business, Category, Review, ReviewVote, Report, Notification, HomepageConfig, TelegramVerification, BusinessClaim, BusinessMetric, SystemConfig };

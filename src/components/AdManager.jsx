@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Card } from '@/components/ui';
 import { TrendingUp, CheckCircle, AlertCircle, Calendar, CreditCard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -15,10 +15,25 @@ export default function AdManager({ business }) {
     const isPromoted = business.promoted_until && new Date(business.promoted_until) > new Date();
     const promotedUntil = isPromoted ? new Date(business.promoted_until).toLocaleDateString() : null;
 
-    const pricing = {
-        7: 5,
-        30: 15
-    };
+    const [pricing, setPricing] = useState({ 7: 5, 30: 15 }); // Fallback
+
+    useEffect(() => {
+        const fetchPricing = async () => {
+            try {
+                const res = await fetch('/api/admin/config');
+                if (res.ok) {
+                    const data = await res.json();
+                    setPricing({
+                        7: data.promote_7_days,
+                        30: data.promote_30_days
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to fetch pricing", err);
+            }
+        };
+        fetchPricing();
+    }, []);
 
     const handlePromote = async () => {
         setLoading(true);
@@ -82,7 +97,7 @@ export default function AdManager({ business }) {
                             }`}
                     >
                         <div className="font-bold text-slate-900">7 Days</div>
-                        <div className="text-indigo-600 font-medium">$5.00</div>
+                        <div className="text-indigo-600 font-medium">${pricing[7]?.toFixed(2)}</div>
                     </button>
                     <button
                         onClick={() => setDuration(30)}
@@ -92,8 +107,8 @@ export default function AdManager({ business }) {
                             }`}
                     >
                         <div className="font-bold text-slate-900">30 Days</div>
-                        <div className="text-indigo-600 font-medium">$15.00</div>
-                        <div className="text-xs text-green-600 font-bold mt-1">Save 15%</div>
+                        <div className="text-indigo-600 font-medium">${pricing[30]?.toFixed(2)}</div>
+                        <div className="text-xs text-green-600 font-bold mt-1">Best Value</div>
                     </button>
                 </div>
 
@@ -119,7 +134,7 @@ export default function AdManager({ business }) {
                     {loading ? 'Processing...' : (
                         <>
                             <CreditCard className="w-4 h-4 mr-2" />
-                            Pay ${pricing[duration]} & Promote
+                            Pay ${pricing[duration]?.toFixed(2)} & Promote
                         </>
                     )}
                 </Button>

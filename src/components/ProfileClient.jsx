@@ -197,6 +197,61 @@ export default function ProfileClient({ data }) {
 
                     {activeTab === 'businesses' && (
                         <div className="space-y-8">
+                            {/* Owned Businesses (Verified Owners) */}
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                    My Businesses <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded-full">Owner</span>
+                                </h3>
+                                {data.myOwnedBusinesses && data.myOwnedBusinesses.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {data.myOwnedBusinesses.map((business) => (
+                                            <Card key={business._id} className="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 hover:shadow-md transition-shadow">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
+                                                        <img
+                                                            src={business.images?.[0] || 'https://placehold.co/100x100?text=Biz'}
+                                                            alt={business.name}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                                                            {business.name}
+                                                            <VerifiedBadge className="w-4 h-4" />
+                                                        </h4>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <div className="text-sm font-bold text-indigo-600">
+                                                                {business.subscription_tier === 'pro' ? 'PRO Plan' : 'Free Plan'}
+                                                            </div>
+                                                            <span className="text-slate-300">•</span>
+                                                            <span className="text-sm text-slate-500">{business.category}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2 w-full sm:w-auto">
+                                                    <Link href={`/business/${business._id}/dashboard`} className="flex-1 sm:flex-none">
+                                                        <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 w-full gap-2">
+                                                            <LayoutDashboard className="w-4 h-4" />
+                                                            Dashboard
+                                                        </Button>
+                                                    </Link>
+                                                    <Link href={`/business/${business._id}`} className="flex-1 sm:flex-none">
+                                                        <Button size="sm" variant="outline" className="w-full">View Page</Button>
+                                                    </Link>
+                                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="bg-slate-50 border border-dashed border-slate-300 rounded-lg p-6 text-center">
+                                        <p className="text-slate-500 mb-2">You haven't claimed any businesses yet.</p>
+                                        <Link href="/business/new">
+                                            <Button variant="outline" size="sm">List a Business</Button>
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+
                             {/* Submitted Businesses */}
                             <div>
                                 <h3 className="text-lg font-bold text-slate-900 mb-4">Submitted Businesses</h3>

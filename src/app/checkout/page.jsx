@@ -17,18 +17,29 @@ function CheckoutForm() {
     const [success, setSuccess] = useState(false);
     const [businesses, setBusinesses] = useState([]);
     const [selectedBusinessId, setSelectedBusinessId] = useState('');
+    const [pricing, setPricing] = useState({ pro_monthly: 29 }); // Default fallback
+
+    // Fetch dynamic pricing
+    useEffect(() => {
+        const fetchPricing = async () => {
+            try {
+                const res = await fetch('/api/admin/config');
+                if (res.ok) {
+                    const data = await res.json();
+                    setPricing(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch pricing", err);
+            }
+        };
+        fetchPricing();
+    }, []);
 
     // Fetch user's businesses to select which one to upgrade
     useEffect(() => {
         const fetchBusinesses = async () => {
             try {
-                const res = await fetch('/api/user/businesses'); // We might need to create this or use existing
-                // Fallback: use the admin/businesses API but filtered? 
-                // Better: Create a specific endpoint or use existing if available.
-                // Let's assume we need to fetch businesses owned by the user.
-                // For now, let's try to fetch from a new endpoint we'll create or just mock if needed.
-                // Actually, we can use /api/businesses?owner_id=... if that exists, or just create a simple one.
-                // Let's assume we'll create /api/user/businesses for this.
+                const res = await fetch('/api/user/businesses');
                 const data = await res.json();
 
                 if (res.ok) {
@@ -55,7 +66,7 @@ function CheckoutForm() {
         if (session) {
             fetchBusinesses();
         }
-    }, [session]);
+    }, [session, searchParams]);
 
     const handlePayment = async (e) => {
         e.preventDefault();
@@ -137,7 +148,7 @@ function CheckoutForm() {
                     <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                         <div className="flex justify-between items-center mb-2">
                             <span className="font-medium text-slate-900">Pro Subscription</span>
-                            <span className="font-bold text-slate-900">$20.00</span>
+                            <span className="font-bold text-slate-900">${pricing.pro_monthly.toFixed(2)}</span>
                         </div>
                         <p className="text-xs text-slate-500">Billed monthly</p>
                     </div>
@@ -167,7 +178,7 @@ function CheckoutForm() {
 
                     <Button type="submit" className="w-full" disabled={loading || businesses.length === 0}>
                         {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
-                        {loading ? 'Processing...' : 'Pay $20.00'}
+                        {loading ? 'Processing...' : `Pay $${pricing.pro_monthly.toFixed(2)}`}
                     </Button>
                 </form>
             </Card>

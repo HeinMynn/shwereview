@@ -6,6 +6,8 @@ import AdminBusinessList from './AdminBusinessList';
 import AdminReportList from './AdminReportList';
 import AdminHomepageEditor from './AdminHomepageEditor';
 import AdminNotificationSender from './AdminNotificationSender';
+import AdminPricingEditor from '@/components/AdminPricingEditor';
+import { DollarSign } from 'lucide-react';
 import AdminDataQuery from './AdminDataQuery';
 import { Card } from '@/components/ui';
 import { Users, Building2, AlertTriangle, LayoutGrid, FileText, Shield, Bell, Trash2, Database } from 'lucide-react';
@@ -53,6 +55,7 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses, 
                     <TabButton id="notifications" label="Notifications" icon={Bell} />
                     <TabButton id="query" label="Query" icon={Database} />
                     <TabButton id="homepage" label="Homepage Editor" icon={LayoutGrid} />
+                    <TabButton id="pricing" label="Pricing" icon={DollarSign} />
                 </div>
 
                 {activeTab === 'overview' && (
@@ -165,6 +168,10 @@ export default function AdminDashboardClient({ initialUsers, initialBusinesses, 
 
                 {activeTab === 'notifications' && (
                     <AdminNotificationSender users={users} />
+                )}
+
+                {activeTab === 'pricing' && ( // Added conditional rendering for Pricing tab
+                    <AdminPricingEditor />
                 )}
 
                 {activeTab === 'query' && (

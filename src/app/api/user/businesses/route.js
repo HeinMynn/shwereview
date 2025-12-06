@@ -15,10 +15,7 @@ export async function GET(request) {
 
         // Find businesses owned by the user or submitted by the user
         const businesses = await Business.find({
-            $or: [
-                { owner_id: session.user.id },
-                { submitted_by: session.user.id }
-            ]
+            owner_id: session.user.id
         }).select('name address subscription_tier subscription_status images aggregate_rating');
 
         return NextResponse.json({ businesses });

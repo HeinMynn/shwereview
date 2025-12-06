@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { Card, Button } from '@/components/ui';
-import { Star, TrendingUp, Users, Building2, LayoutGrid, List, MessageSquare, Plus } from 'lucide-react';
+import { Star, TrendingUp, Users, Building2, LayoutGrid, List, MessageSquare, Plus, BarChart2 } from 'lucide-react';
 import DashboardChart from '@/components/DashboardChart';
 import DashboardReviews from '@/components/DashboardReviews';
 import Link from 'next/link';
 import AdManager from '@/components/AdManager';
 
 export default function DashboardClient({ data }) {
-    const { businesses = [], recentReviews, chartData, totalReviewsReceived, submissions, myReviews, user } = data;
+    const { businesses = [], recentReviews, chartData, totalReviewsReceived, myReviews, user } = data;
     const [activeTab, setActiveTab] = useState('overview');
     const [promotingBusinessId, setPromotingBusinessId] = useState(null);
 
@@ -184,12 +184,12 @@ export default function DashboardClient({ data }) {
                     activeTab === 'businesses' && (
                         <div className="space-y-6">
                             <div className="flex justify-between items-center">
-                                <h2 className="text-xl font-bold text-slate-900">My Businesses & Submissions</h2>
+                                <h2 className="text-xl font-bold text-slate-900">My Businesses</h2>
                             </div>
 
-                            {businesses.length === 0 && submissions.length === 0 ? (
+                            {businesses.length === 0 ? (
                                 <Card className="p-12 text-center">
-                                    <p className="text-slate-600">You haven't listed any businesses yet.</p>
+                                    <p className="text-slate-600">You haven't confirmed any business ownerships yet.</p>
                                 </Card>
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
@@ -231,7 +231,13 @@ export default function DashboardClient({ data }) {
                                                             <Button variant="outline" className="w-full">View Page</Button>
                                                         </Link>
                                                         <Link href={`/business/${business._id}/edit`} className="flex-1 md:flex-none">
-                                                            <Button className="w-full">Edit</Button>
+                                                            <Button variant="outline" className="w-full">Edit</Button>
+                                                        </Link>
+                                                        <Link href={`/business/${business._id}/dashboard`} className="flex-1 md:flex-none">
+                                                            <Button className="w-full bg-slate-900 text-white hover:bg-slate-800 gap-2">
+                                                                <BarChart2 className="w-4 h-4" />
+                                                                Analytics
+                                                            </Button>
                                                         </Link>
                                                     </div>
                                                     <div className="flex gap-2">
@@ -265,21 +271,7 @@ export default function DashboardClient({ data }) {
                                         </Card>
                                     ))}
 
-                                    {/* Pending Submissions */}
-                                    {submissions.map(sub => (
-                                        <Card key={sub._id} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 opacity-75">
-                                            <div>
-                                                <h3 className="font-bold text-lg text-slate-900">{sub.name}</h3>
-                                                <p className="text-sm text-slate-600 mb-1">{sub.address}</p>
-                                                <span className={`px-2 py-1 rounded text-xs font-bold capitalize ${sub.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                    sub.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-gray-100'
-                                                    }`}>
-                                                    {sub.status} Submission
-                                                </span>
-                                            </div>
-                                            <Button disabled variant="outline">Processing</Button>
-                                        </Card>
-                                    ))}
+
                                 </div>
                             )}
                         </div>

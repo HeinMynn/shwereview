@@ -117,7 +117,7 @@ function VerifyContent() {
                     />
                 </div>
                 <div>
-                    <div>
+                    <div className="mb-6">
                         <label className="block text-sm font-medium mb-3 text-center">Verification Code</label>
                         <VerificationInput
                             value={code}

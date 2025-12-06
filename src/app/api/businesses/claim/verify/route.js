@@ -69,6 +69,16 @@ export async function POST(request) {
 
             const [email, storedCode] = claim.verification_data.split('|');
 
+            // Check for expiration (15 minutes)
+            if (claim.last_sent_at) {
+                const expirationTime = 15 * 60 * 1000; // 15 minutes
+                const timeElapsed = Date.now() - new Date(claim.last_sent_at).getTime();
+
+                if (timeElapsed > expirationTime) {
+                    return NextResponse.json({ error: 'Verification code has expired. Please request a new one.' }, { status: 400 });
+                }
+            }
+
             if (code === storedCode) {
                 claim.verification_status = 'verified';
                 // Clean up the code, keep only email

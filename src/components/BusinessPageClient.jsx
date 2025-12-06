@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { MapPin, Star, XCircle } from 'lucide-react';
+import { MapPin, Star, XCircle, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui';
 import ShareButton from '@/components/ShareButton';
 import VerifiedBadge from '@/components/VerifiedBadge';
@@ -10,7 +10,7 @@ import BusinessGallery from '@/components/BusinessGallery';
 import BusinessContent from '@/components/BusinessContent';
 import Toast from '@/components/Toast';
 
-export default function BusinessPageClient({ initialBusiness, initialReviews, initialTotalReviewCount, isUnclaimed, hasPendingClaim, isSubmitter, isOwner, similarBusinesses }) {
+export default function BusinessPageClient({ initialBusiness, initialReviews, initialTotalReviewCount, isUnclaimed, userClaim, isSubmitter, isOwner, similarBusinesses }) {
     const [business, setBusiness] = useState(initialBusiness);
     const [reviews, setReviews] = useState(initialReviews);
     const [totalReviewCount, setTotalReviewCount] = useState(initialTotalReviewCount);
@@ -22,9 +22,41 @@ export default function BusinessPageClient({ initialBusiness, initialReviews, in
     const [appealMessage, setAppealMessage] = useState('');
     const [isSubmittingAppeal, setIsSubmittingAppeal] = useState(false);
 
+    const [pricing, setPricing] = useState({ pro_monthly: 29 }); // Fallback
+
+    useEffect(() => {
+        const fetchPricing = async () => {
+            try {
+                const res = await fetch('/api/admin/config');
+                if (res.ok) {
+                    const data = await res.json();
+                    setPricing(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch pricing", err);
+            }
+        };
+        fetchPricing();
+    }, []);
+
     useEffect(() => {
         setMounted(true);
+        // Track View
+        trackEvent('view');
     }, []);
+
+    const trackEvent = async (eventType) => {
+        try {
+            await fetch('/api/analytics/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ businessId: business._id, eventType }),
+            });
+        } catch (err) {
+            // Fail silently for analytics
+            console.error('Tracking failed', err);
+        }
+    };
 
     const handleReviewSubmit = (newReview) => {
         setReviews(prev => [newReview, ...prev]);
@@ -150,19 +182,36 @@ export default function BusinessPageClient({ initialBusiness, initialReviews, in
                 </div>
             )}
 
-            {/* Owner Upgrade Banner */}
-            {isOwner && business.subscription_tier !== 'pro' && (
+
+            {isOwner && (
                 <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-center py-3 px-4 font-bold sticky top-16 z-20 shadow-md">
                     <div className="flex items-center justify-center gap-4 flex-wrap">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xl">🚀</span>
-                            <span>Unlock premium features like custom buttons, verified badge, and analytics!</span>
+                        {business.subscription_tier !== 'pro' ? (
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl">🚀</span>
+                                <span>Unlock premium features like custom buttons, verified badge, and analytics!</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl">✨</span>
+                                <span>You are viewing your business as a <strong>Pro</strong> owner.</span>
+                            </div>
+                        )}
+                        <div className="flex gap-2">
+                            <Link href={`/business/${business._id}/dashboard`}>
+                                <Button size="sm" className="bg-white text-indigo-900 hover:bg-indigo-50 border-0 font-bold gap-2">
+                                    <LayoutDashboard className="w-4 h-4" />
+                                    Manage Dashboard
+                                </Button>
+                            </Link>
+                            {business.subscription_tier !== 'pro' && (
+                                <Link href={`/checkout?plan=pro&businessId=${business._id}`}>
+                                    <Button size="sm" variant="secondary" className="bg-indigo-800 text-white hover:bg-indigo-900 border-0">
+                                        Upgrade to Pro (${pricing.pro_monthly}/mo)
+                                    </Button>
+                                </Link>
+                            )}
                         </div>
-                        <Link href={`/checkout?plan=pro&businessId=${business._id}`}>
-                            <Button size="sm" variant="secondary" className="bg-white text-indigo-600 hover:bg-slate-100 border-0">
-                                Upgrade to Pro
-                            </Button>
-                        </Link>
                     </div>
                 </div>
             )}
@@ -188,9 +237,9 @@ export default function BusinessPageClient({ initialBusiness, initialReviews, in
                                         Unclaimed
                                     </span>
                                 )}
-                                {hasPendingClaim && (
-                                    <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
-                                        Claim Pending
+                                {userClaim && (
+                                    <span className={`text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1 ${userClaim.verification_status === 'pending' ? 'bg-orange-500' : 'bg-green-500'}`}>
+                                        {userClaim.verification_status === 'pending' ? 'Verification Incomplete' : 'Claim Pending'}
                                     </span>
                                 )}
                             </div>
@@ -216,25 +265,37 @@ export default function BusinessPageClient({ initialBusiness, initialReviews, in
                         </div>
 
                         <div className="flex gap-3">
-                            <ShareButton
-                                title={business.name}
-                                text={`Check out ${business.name} on ShweReview!`}
-                                className="bg-white text-slate-900 hover:bg-slate-100"
-                            />
-                            {isUnclaimed && !hasPendingClaim && (
+                            <div onClick={() => trackEvent('click_share')}>
+                                <ShareButton
+                                    title={business.name}
+                                    text={`Check out ${business.name} on ShweReview!`}
+                                    className="bg-white text-slate-900 hover:bg-slate-100"
+                                />
+                            </div>
+                            {isUnclaimed && !userClaim && (
                                 <Link href={`/business/${business._id}/claim`}>
                                     <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
                                         Claim this Business
                                     </Button>
                                 </Link>
                             )}
-                            {hasPendingClaim && (
+                            {userClaim && userClaim.verification_status === 'pending' && (
+                                <Link href={`/business/${business._id}/claim`}>
+                                    <Button
+                                        className="bg-orange-500 hover:bg-orange-600 text-white font-semibold"
+                                        title="Continue your claim verification"
+                                    >
+                                        Continue Claim
+                                    </Button>
+                                </Link>
+                            )}
+                            {userClaim && userClaim.verification_status === 'verified' && (
                                 <Button
                                     disabled
                                     className="bg-gray-400 text-white cursor-not-allowed"
                                     title="Your claim is pending review by admin"
                                 >
-                                    Pending Claim
+                                    Claim Pending Approval
                                 </Button>
                             )}
                         </div>

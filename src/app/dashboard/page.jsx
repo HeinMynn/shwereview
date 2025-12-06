@@ -21,12 +21,6 @@ async function getOwnerData() {
         .sort({ createdAt: -1 })
         .lean();
 
-    // 2. Find submissions by this user
-    const submissions = await Business.find({ submitted_by: ownerId })
-        .select('name address status')
-        .sort({ createdAt: -1 })
-        .lean();
-
     // 3. Find reviews by this user
     const myReviews = await Review.find({ user_id: ownerId })
         .populate('business_id', 'name category')
@@ -38,7 +32,6 @@ async function getOwnerData() {
         return {
             noBusiness: true,
             user: session.user,
-            submissions: JSON.parse(JSON.stringify(submissions)),
             myReviews: JSON.parse(JSON.stringify(myReviews))
         };
     }
@@ -105,7 +98,6 @@ async function getOwnerData() {
         recentReviews: JSON.parse(JSON.stringify(recentReviews)), // Renamed from allReviews to be clear it's partial
         chartData: JSON.parse(JSON.stringify(chartData)),
         totalReviewsReceived,
-        submissions: JSON.parse(JSON.stringify(submissions)),
         myReviews: JSON.parse(JSON.stringify(myReviews)),
         user: session.user
     };

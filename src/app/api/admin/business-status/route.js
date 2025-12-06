@@ -42,6 +42,42 @@ export async function POST(request) {
         }
 
         console.log('Business updated successfully:', business);
+
+        // Send Notification to Submitter
+        if (business.submitted_by && (status === 'approved' || status === 'rejected')) {
+            try {
+                // Import dynamically to avoid circular dependency issues if any, though likely not needed here. 
+                // Better to import at top level, but for partial edit:
+                const { createNotification } = await import('@/lib/notifications');
+
+                let title, message, type;
+
+                if (status === 'approved') {
+                    title = 'Business Submission Approved';
+                    message = `Your submission for "${business.name}" has been approved and is now live!`;
+                    type = 'business_approved';
+                } else if (status === 'rejected') {
+                    title = 'Business Submission Rejected';
+                    message = `Your submission for "${business.name}" was rejected. Reason: ${updateData.rejection_reason}`;
+                    type = 'business_rejected';
+                }
+
+                await createNotification({
+                    userId: business.submitted_by,
+                    type: type || 'other',
+                    title,
+                    message,
+                    link: `/business/${business._id}`, // Or edit page if rejected? straightforward to business page or dashboard
+                    metadata: { business_id: business._id }
+                });
+                console.log(`Notification sent to submitter ${business.submitted_by}`);
+
+            } catch (notiError) {
+                console.error('Failed to send notification:', notiError);
+                // Don't fail the request just because notification failed
+            }
+        }
+
         return NextResponse.json({ success: true, business });
     } catch (error) {
         console.error('Status update error:', error);

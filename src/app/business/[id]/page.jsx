@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import mongoose from 'mongoose';
 import dbConnect from '@/lib/mongodb';
-import { Business, Review } from '@/lib/models';
+import { Business, Review, BusinessClaim } from '@/lib/models';
 import BusinessPageClient from '@/components/BusinessPageClient';
 
 import { Button, Card } from '@/components/ui';
@@ -107,10 +107,26 @@ export default async function BusinessProfile({ params }) {
     const session = await getServerSession(authOptions);
 
     const isUnclaimed = !business.owner_id;
-    const hasPendingClaim = business.claim_status === 'pending' && business.claimant_id?.toString() === session?.user?.id;
+
+    // Check for pending claim directly from the Claims collection
+    let hasPendingClaim = false;
+    let pendingClaimDoc = null;
+    if (session?.user?.id) {
+        const claim = await BusinessClaim.findOne({
+            business_id: id,
+            claimant_id: session.user.id,
+            status: 'pending'
+        });
+        if (claim) {
+            hasPendingClaim = true;
+            pendingClaimDoc = claim.toObject ? claim.toObject() : claim;
+        }
+    }
+
     const isPendingApproval = business.status === 'pending';
     const isSubmitter = session?.user?.id && business.submitted_by?.toString() === session.user.id;
     const isOwner = session?.user?.id && business.owner_id?.toString() === session.user.id;
+
 
     return (
         <BusinessPageClient
@@ -118,7 +134,7 @@ export default async function BusinessProfile({ params }) {
             initialReviews={reviews}
             initialTotalReviewCount={data.totalReviewCount}
             isUnclaimed={isUnclaimed}
-            hasPendingClaim={hasPendingClaim}
+            userClaim={hasPendingClaim ? { status: 'pending', verification_status: pendingClaimDoc?.verification_status } : null}
             isSubmitter={isSubmitter}
             isOwner={isOwner}
             similarBusinesses={similarBusinesses}

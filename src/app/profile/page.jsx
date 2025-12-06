@@ -26,9 +26,15 @@ async function getProfileData() {
         .sort({ createdAt: -1 })
         .lean();
 
+    // Find businesses owned/claimed by this user
+    const myOwnedBusinesses = await Business.find({ owner_id: userId })
+        .sort({ createdAt: -1 })
+        .lean();
+
     return {
         myReviews: JSON.parse(JSON.stringify(myReviews)),
         mySubmittedBusinesses: JSON.parse(JSON.stringify(mySubmittedBusinesses)),
+        myOwnedBusinesses: JSON.parse(JSON.stringify(myOwnedBusinesses)),
         user: session.user
     };
 }
